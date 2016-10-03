@@ -44,6 +44,7 @@ task downloadGsaLibFile(type: Download) {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     jcenter()
 
     maven {

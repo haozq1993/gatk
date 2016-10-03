@@ -83,6 +83,14 @@ public final class FeatureInputUnitTest extends BaseTest {
     }
 
     @Test
+    public void testNioPath() {
+        final FeatureInput<VariantContext> gendbInput = new FeatureInput<>("hdfs://localhost/user/my.vcf");
+
+        Assert.assertEquals(gendbInput.getFeaturePath(), "hdfs://localhost/user/my.vcf", "wrong featurePath");
+        Assert.assertEquals(gendbInput.getName(), "/user/my.vcf", "wrong logical name");
+    }
+
+    @Test
     public void testFeatureNameSpecified() {
         FeatureInput<Feature> featureInput = new FeatureInput<>("myName:myFile");
 

@@ -75,7 +75,7 @@ public final class IndexFeatureFile extends CommandLineProgram {
             if (index instanceof TabixIndex) {
                 writeTabixIndex((TabixIndex) index, indexFile);
             } else {
-                IndexFactory.writeIndex(index, indexFile);
+                index.write(indexFile);
             }
         } catch ( final IOException e ) {
             throw new UserException.CouldNotCreateOutputFile("Could not write index to file " + indexFile.getAbsolutePath(), e);
