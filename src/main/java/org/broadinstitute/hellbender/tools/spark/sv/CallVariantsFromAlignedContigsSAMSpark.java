@@ -20,6 +20,7 @@ import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import scala.Tuple2;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,8 +62,8 @@ public final class CallVariantsFromAlignedContigsSAMSpark extends GATKSparkTool 
     }
 
     @Override
-    public ReadFilter makeReadFilter() {
-        return ReadFilterLibrary.MAPPED;
+    public List<ReadFilter> getDefaultReadFilters() {
+        return Collections.singletonList(ReadFilterLibrary.MAPPED);
     }
 
     @Override

@@ -73,11 +73,7 @@ public final class CollectInsertSizeMetrics extends SinglePassSamProgram {
         //to prepare the read filter manually. When the Picard tools are ported to conform
         //to the GATK framework, this code should be eliminated in favor of engine-level
         //read filter processing/merging
-        List<ReadFilter> readFilters = insertSizeCollector.getDefaultReadFilters();
-        readFilters.forEach(f -> f.setHeader(header));
-        insertSizeMetricsReadFilter = readFilters.stream().reduce(
-                ReadFilterLibrary.ALLOW_ALL_READS,
-                (rf1, rf2) -> rf1.and(rf2));
+        insertSizeMetricsReadFilter = ReadFilter.fromList(insertSizeCollector.getDefaultReadFilters(), header);
     }
 
     @Override

@@ -50,11 +50,6 @@ public final class CollectBaseDistributionByCycleSpark extends GATKSparkTool {
     @Argument(shortName="F", fullName = "pfReadsOnly", doc="If set to true calculate the base distribution over PF reads only.")
     public boolean pfReadsOnly = false;
 
-    @Override
-    public ReadFilter makeReadFilter() {
-        return ReadFilterLibrary.ALLOW_ALL_READS;
-    }
-
     private static final class HistogramGenerator implements Serializable{
         private static final long serialVersionUID = 1L;
 

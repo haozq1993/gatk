@@ -2,11 +2,12 @@ package org.broadinstitute.hellbender.engine;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
+import org.broadinstitute.hellbender.cmdline.Argument;
 import org.broadinstitute.hellbender.CommandLineProgramTest;
 import org.broadinstitute.hellbender.cmdline.CommandLineParser;
 import org.broadinstitute.hellbender.cmdline.CommandLineProgramProperties;
 import org.broadinstitute.hellbender.cmdline.TestProgramGroup;
+import org.broadinstitute.hellbender.engine.filters.ReadFilterLibrary;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.tools.examples.ExampleVariantWalker;
 import org.broadinstitute.hellbender.utils.test.ArgumentsBuilder;
@@ -62,15 +63,17 @@ public final class VariantWalkerIntegrationTest extends CommandLineProgramTest {
     )
     private static final class TestGATKToolWithFeatures extends VariantWalker{
 
-        @Override
-        public boolean requiresFeatures() {
-            return true;
-        }
+        @Argument(fullName="hasBackingReadSource")
+        boolean hasBackingReadSource = false;
+
+        @Argument(fullName="hasBackingReads")
+        boolean hasBackingReads = false;
 
         public void apply(
                 VariantContext variant,
                 ReadsContext readsContext, ReferenceContext referenceContext, FeatureContext featureContext ) {
-            // no-op
+            Assert.assertEquals(readsContext.hasBackingDataSource(), hasBackingReadSource);
+            Assert.assertEquals(readsContext.iterator().hasNext(), hasBackingReads);
         }
     }
 
@@ -104,6 +107,35 @@ public final class VariantWalkerIntegrationTest extends CommandLineProgramTest {
         // make sure we get the seq dict from the index when there isn't one in the VCF and there is no reference available
         final SAMSequenceDictionary toolDict = tool.getBestAvailableSequenceDictionary();
         Assert.assertTrue(toolDict.getSequences().stream().allMatch(seqRec -> seqRec.getSequenceLength() == 0));
+    }
+
+    @Test
+    public void testReadFilterOff() throws Exception {
+        final GATKTool tool = new TestGATKToolWithFeatures();
+        final File vcfFile = new File(publicTestDir + "org/broadinstitute/hellbender/engine/example_variants_WithReads.vcf");
+        final File bamFile = new File(publicTestDir + "org/broadinstitute/hellbender/engine/example_variants_WithReads.bam");
+        final String[] args = {
+                "--variant", vcfFile.getCanonicalPath(),
+                "--input", bamFile.getCanonicalPath(),
+                "--hasBackingReadSource", "true",
+                "--hasBackingReads", "true"
+        };
+        tool.instanceMain(args);
+    }
+
+    @Test
+    public void testReadFilterOn() throws Exception {
+        final GATKTool tool = new TestGATKToolWithFeatures();
+        final File vcfFile = new File(publicTestDir + "org/broadinstitute/hellbender/engine/example_variants_WithReads.vcf");
+        final File bamFile = new File(publicTestDir + "org/broadinstitute/hellbender/engine/example_variants_WithReads.bam");
+        final String[] args = {
+                "--variant", vcfFile.getCanonicalPath(),
+                "--input", bamFile.getCanonicalPath(),  // all reads have MAPQ == 0
+                "--readFilter", ReadFilterLibrary.MAPPING_QUALITY_NOT_ZERO.getClass().getSimpleName(),
+                "--hasBackingReadSource", "true",
+                "--hasBackingReads", "false"
+        };
+        tool.instanceMain(args);
     }
 
 }

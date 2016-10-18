@@ -5,6 +5,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 import org.broadinstitute.hellbender.cmdline.Argument;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
+import org.broadinstitute.hellbender.engine.filters.CountingReadFilter;
 import org.broadinstitute.hellbender.engine.filters.VariantFilter;
 import org.broadinstitute.hellbender.engine.filters.VariantFilterLibrary;
 import org.broadinstitute.hellbender.exceptions.GATKException;
@@ -111,14 +112,15 @@ public abstract class VariantWalker extends GATKTool {
      */
     @Override
     public void traverse() {
-        final VariantFilter filter = makeVariantFilter();
+        final VariantFilter variantfilter = makeVariantFilter();
+        final CountingReadFilter readFilter = makeReadFilter();
         // Process each variant in the input stream.
         StreamSupport.stream(drivingVariants.spliterator(), false)
-                .filter(filter)
+                .filter(variantfilter)
                 .forEach(variant -> {
                     final SimpleInterval variantInterval = new SimpleInterval(variant);
                     apply(variant,
-                          new ReadsContext(reads, variantInterval),
+                          new ReadsContext(reads, variantInterval, readFilter),
                           new ReferenceContext(reference, variantInterval),
                           new FeatureContext(features, variantInterval));
 

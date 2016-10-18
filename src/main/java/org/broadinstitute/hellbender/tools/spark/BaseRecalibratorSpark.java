@@ -15,7 +15,6 @@ import org.broadinstitute.hellbender.engine.spark.AddContextDataToReadSpark;
 import org.broadinstitute.hellbender.engine.spark.GATKSparkTool;
 import org.broadinstitute.hellbender.engine.spark.JoinStrategy;
 import org.broadinstitute.hellbender.engine.spark.datasources.VariantsSparkSource;
-import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.tools.spark.transforms.BaseRecalibratorSparkFn;
 import org.broadinstitute.hellbender.tools.walkers.bqsr.BaseRecalibrator;
@@ -51,8 +50,8 @@ public class BaseRecalibratorSpark extends GATKSparkTool {
     }
 
     @Override
-    public ReadFilter makeReadFilter() {
-        return BaseRecalibrator.getStandardBQSRReadFilter(getHeaderForReads());
+    public List<ReadFilter> getDefaultReadFilters() {
+        return BaseRecalibrator.getFullBQSRReadFilterList();
     }
 
     @Argument(doc = "the known variants", shortName = "knownSites", fullName = "knownSites", optional = false)

@@ -8,11 +8,10 @@ import org.broadinstitute.hellbender.cmdline.Hidden;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
 import org.broadinstitute.hellbender.cmdline.programgroups.QCProgramGroup;
 import org.broadinstitute.hellbender.engine.*;
-import org.broadinstitute.hellbender.engine.filters.CountingReadFilter;
+import org.broadinstitute.hellbender.engine.filters.ReadFilter;
 import org.broadinstitute.hellbender.engine.filters.ReadFilterLibrary;
 import org.broadinstitute.hellbender.engine.filters.WellformedReadFilter;
 import org.broadinstitute.hellbender.exceptions.UserException;
-import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.pileup.PileupElement;
 import org.broadinstitute.hellbender.utils.pileup.ReadPileup;
 
@@ -113,14 +112,15 @@ public final class Pileup extends LocusWalker {
     }
 
     @Override
-    public CountingReadFilter makeReadFilter(){
-        return new CountingReadFilter(new WellformedReadFilter(getHeaderForReads()))
-            .and(new CountingReadFilter(ReadFilterLibrary.MAPPED))
-            .and(new CountingReadFilter(ReadFilterLibrary.NOT_DUPLICATE))
-            .and(new CountingReadFilter(ReadFilterLibrary.PASSES_VENDOR_QUALITY_CHECK))
-            .and(new CountingReadFilter(ReadFilterLibrary.PRIMARY_ALIGNMENT));
+    public List<ReadFilter> getDefaultReadFilters() {
+        List<ReadFilter> filterList = new ArrayList<>(5);
+        filterList.add(new WellformedReadFilter());
+        filterList.add(ReadFilterLibrary.MAPPED);
+        filterList.add(ReadFilterLibrary.NOT_DUPLICATE);
+        filterList.add(ReadFilterLibrary.PASSES_VENDOR_QUALITY_CHECK);
+        filterList.add(ReadFilterLibrary.PRIMARY_ALIGNMENT);
+        return filterList;
     }
-
 
     @Override
     public void onTraversalStart() {

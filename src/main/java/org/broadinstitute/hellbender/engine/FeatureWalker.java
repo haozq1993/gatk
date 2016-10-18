@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.engine;
 
 import htsjdk.tribble.Feature;
 import htsjdk.tribble.FeatureCodec;
+import org.broadinstitute.hellbender.engine.filters.CountingReadFilter;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
 
@@ -63,12 +64,13 @@ public abstract class FeatureWalker<F extends Feature> extends GATKTool {
      */
     @Override
     public void traverse() {
+        CountingReadFilter readFilter = makeReadFilter();
         // Process each feature in the input stream.
         StreamSupport.stream(drivingFeatures.spliterator(), false)
                 .forEach(feature -> {
                     final SimpleInterval featureInterval = new SimpleInterval(feature);
                     apply(feature,
-                            new ReadsContext(reads, featureInterval),
+                            new ReadsContext(reads, featureInterval, readFilter),
                             new ReferenceContext(reference, featureInterval),
                             new FeatureContext(features, featureInterval));
                     progressMeter.update(feature);

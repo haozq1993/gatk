@@ -7,7 +7,10 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public final class CountingReadFilterUnitTest {
 
@@ -244,5 +247,62 @@ public final class CountingReadFilterUnitTest {
         Assert.assertEquals(badStartAndEnd.getFilteredCount(), startEndRejections);
         Assert.assertEquals(isRayOrEgon.getFilteredCount(), nameRejections);
     }
+
+    @Test
+    public void testFromListNull() {
+        CountingReadFilter rf = CountingReadFilter.fromList(null, ArtificialReadUtils.createArtificialSamHeader(1, 1, 10));
+        Assert.assertTrue(rf.delegateFilter.getClass().getSimpleName().equals(
+                ReadFilterLibrary.AllowAllReadsReadFilter.class.getSimpleName()));
+    }
+    @Test
+    public void testFromListEmpty() {
+        CountingReadFilter rf = CountingReadFilter.fromList(Collections.emptyList(), ArtificialReadUtils.createArtificialSamHeader(1, 1, 10));
+        Assert.assertTrue(rf.delegateFilter.getClass().getSimpleName().equals(
+                ReadFilterLibrary.AllowAllReadsReadFilter.class.getSimpleName()));
+    }
+
+    @Test
+    public void testFromListSingle() {
+        List<ReadFilter> filters = new ArrayList<>();
+        filters.add(ReadFilterLibrary.MAPPED);
+        CountingReadFilter rf = CountingReadFilter.fromList(filters, ArtificialReadUtils.createArtificialSamHeader(1, 1, 10));
+        Assert.assertTrue(rf.delegateFilter.getClass().getSimpleName().equals(
+                ReadFilterLibrary.MAPPED.getClass().getSimpleName()));
+    }
+
+    @Test
+    public void testFromListMultiOrdered() {
+        List<ReadFilter> filters = new ArrayList<>();
+        filters.add(ReadFilterLibrary.MAPPING_QUALITY_AVAILABLE);
+        filters.add(ReadFilterLibrary.MAPPED);
+        filters.add(ReadFilterLibrary.GOOD_CIGAR);
+
+        // Since we want to ensure that order of the input is honored, we need to test the
+        // structure of the filter rather than the result
+        CountingReadFilter rf = CountingReadFilter.fromList(filters, ArtificialReadUtils.createArtificialSamHeader(1, 1, 10));
+
+        Assert.assertTrue(rf.getClass().getSimpleName().equals(
+                CountingReadFilter.CountingAndReadFilter.class.getSimpleName()));
+        CountingReadFilter.CountingAndReadFilter andFilter = (CountingReadFilter.CountingAndReadFilter) rf;
+
+        // lhs is a Counting and filter; rhs is a counting filter that delegates to GOOD_CIGAR
+        Assert.assertTrue(andFilter.lhs.getClass().getSimpleName().equals(
+                CountingReadFilter.CountingAndReadFilter.class.getSimpleName()));
+        Assert.assertTrue(andFilter.rhs.delegateFilter.getClass().getSimpleName().equals(
+                ReadFilterLibrary.GOOD_CIGAR.getClass().getSimpleName()));
+        andFilter = (CountingReadFilter.CountingAndReadFilter) andFilter.lhs;
+
+        // lhs is a Counting filter that delegates to MAPPING_QUALITY_AVAILABLE; rhs is a
+        // counting filter that delegates to MAPPED
+        Assert.assertTrue(andFilter.lhs.getClass().getSimpleName().equals(
+                CountingReadFilter.class.getSimpleName()));
+        Assert.assertTrue(andFilter.lhs.delegateFilter.getClass().getSimpleName().equals(
+                ReadFilterLibrary.MAPPING_QUALITY_AVAILABLE.getClass().getSimpleName()));
+        Assert.assertTrue(andFilter.rhs.getClass().getSimpleName().equals(
+                CountingReadFilter.class.getSimpleName()));
+        Assert.assertTrue(andFilter.rhs.delegateFilter.getClass().getSimpleName().equals(
+                ReadFilterLibrary.MAPPED.getClass().getSimpleName()));
+    }
+
 }
 

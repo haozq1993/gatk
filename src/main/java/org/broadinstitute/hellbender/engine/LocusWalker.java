@@ -2,8 +2,6 @@ package org.broadinstitute.hellbender.engine;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
-import org.broadinstitute.hellbender.cmdline.GATKPlugin.GATKCommandLinePluginDescriptor;
-import org.broadinstitute.hellbender.cmdline.GATKPlugin.GATKReadFilterPluginDescriptor;
 import org.broadinstitute.hellbender.engine.filters.CountingReadFilter;
 import org.broadinstitute.hellbender.engine.filters.ReadFilter;
 import org.broadinstitute.hellbender.engine.filters.ReadFilterLibrary;
@@ -61,37 +59,6 @@ public abstract class LocusWalker extends GATKTool {
      */
     public boolean includeNs() {
         return false;
-    }
-
-    /**
-     * Return the list of GATKCommandLinePluginDescriptors to be used for this CLP.
-     * Uses the read filter plugin.
-     */
-    @Override
-    protected List<? extends GATKCommandLinePluginDescriptor<?>> getPluginDescriptors() {
-        return Collections.singletonList(new GATKReadFilterPluginDescriptor(getDefaultReadFilters()));
-    }
-
-    /**
-     * Returns the read filter (simple or composite) that will be applied to the reads before calling {@link #apply}.
-     * The default implementation combines the default read filters for this tool (returned by
-     * {@link org.broadinstitute.hellbender.engine.LocusWalker#getDefaultReadFilters} with any read filter command
-     * line arguments specified by the user; wraps each filter in the resulting list with a CountingReadFilter;
-     * and returns a single composite filter resulting from the list by and'ing them together.
-     *
-     * Default tool implementation of {@link #traverse()} calls this method once before iterating
-     * over the reads and reuses the filter object to avoid object allocation. Nevertheless, keeping state in filter
-     * objects is strongly discouraged.
-     *
-     * Multiple filters can be composed by using {@link org.broadinstitute.hellbender.engine.filters.ReadFilter}
-     * composition methods.
-     */
-    public CountingReadFilter makeReadFilter(){
-        // Unless all filters are disabled, merge the tool's default filters with the users's command line
-        // read filter requests, then initialize the resulting filters and wrap each one in a CountingReadFilter.
-        final GATKReadFilterPluginDescriptor readFilterPlugin =
-                        commandLineParser.getPluginDescriptor(GATKReadFilterPluginDescriptor.class);
-        return readFilterPlugin.getMergedCountingReadFilter(getHeaderForReads());
     }
 
     /**

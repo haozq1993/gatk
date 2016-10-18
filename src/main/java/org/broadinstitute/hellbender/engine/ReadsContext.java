@@ -1,6 +1,8 @@
 package org.broadinstitute.hellbender.engine;
 
+import org.broadinstitute.hellbender.engine.filters.ReadFilter;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
+import org.broadinstitute.hellbender.utils.iterators.ReadFilteringIterator;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 
 import java.util.Collections;
@@ -23,12 +25,14 @@ public final class ReadsContext implements Iterable<GATKRead> {
 
     private final SimpleInterval interval;
 
+    private final ReadFilter readFilter;
+
     /**
      * Create an empty ReadsContext with no backing data source or interval. Calls to
      * {@link #iterator} on this context will always return an empty iterator.
      */
     public ReadsContext() {
-        this(null, null);
+        this(null, null, null);
     }
 
     /**
@@ -40,8 +44,22 @@ public final class ReadsContext implements Iterable<GATKRead> {
      * @param interval interval over which to query (may be null)
      */
     public ReadsContext( final ReadsDataSource dataSource, final SimpleInterval interval ) {
+        this(dataSource, interval, null);
+    }
+
+    /**
+     * Create a ReadsContext backed by the supplied source of reads. Calls to {@link #iterator}
+     * will return reads overlapping the provided interval. The data source and/or interval
+     * may be null, in which case all calls to {@link #iterator} will return an empty iterator.
+     *
+     * @param dataSource backing source of reads data (may be null)
+     * @param interval interval over which to query (may be null)
+     * @param readFilter read filter to be used to filter reads during iteration (may be null)
+     */
+    public ReadsContext( final ReadsDataSource dataSource, final SimpleInterval interval, final ReadFilter readFilter ) {
         this.dataSource = dataSource;
         this.interval = interval;
+        this.readFilter = readFilter;
     }
 
     /**
@@ -76,6 +94,8 @@ public final class ReadsContext implements Iterable<GATKRead> {
             return Collections.<GATKRead>emptyList().iterator();
         }
 
-        return dataSource.query(interval);
+        return readFilter == null ?
+                dataSource.query(interval) :
+                new ReadFilteringIterator(dataSource.query(interval), readFilter);
     }
 }
