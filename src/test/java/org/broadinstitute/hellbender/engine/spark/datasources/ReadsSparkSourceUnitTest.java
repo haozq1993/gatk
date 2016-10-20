@@ -12,6 +12,7 @@ import org.broadinstitute.hellbender.engine.spark.SparkContextFactory;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.utils.IntervalUtils;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
+import org.broadinstitute.hellbender.utils.gcs.BucketUtils;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.read.ReadConstants;
 import org.broadinstitute.hellbender.utils.read.SAMRecordToGATKReadAdapter;
@@ -235,7 +236,7 @@ public class ReadsSparkSourceUnitTest extends BaseTest {
             samReaderFactory = SamReaderFactory.makeDefault().validationStringency(validationStringency);
         }
 
-        ReadsDataSource bam2 = new ReadsDataSource(new File(bam), samReaderFactory);
+        ReadsDataSource bam2 = new ReadsDataSource(BucketUtils.getPath(bam), samReaderFactory);
         bam2.setTraversalBounds(intervals);
         List<GATKRead> records = Lists.newArrayList();
         for ( GATKRead read : bam2 ) {

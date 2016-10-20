@@ -28,6 +28,7 @@ import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.io.IOUtils;
 
 import java.io.*;
+import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.file.NoSuchFileException;
 import java.util.Arrays;
@@ -386,6 +387,22 @@ public final class BucketUtils {
         final String BUCKET = split[2];
         final String pathWithoutBucket = String.join("/", Arrays.copyOfRange(split, 3, split.length));
         return CloudStorageFileSystem.forBucket(BUCKET).getPath(pathWithoutBucket);
+    }
+
+    /**
+     * String -> Path. This will accept either
+     * "folder/file", or
+     * "file://folder/file", or
+     * "gs://bucket/folder/file".
+     * It will only accept "hdfs://" if you have an NIO filesystem provider installed for HDFS.
+     */
+    public static java.nio.file.Path getPath(String fileNameOrUrl) {
+        // special case GCS, in case the filesystem provider wasn't installed properly but is available.
+        if (fileNameOrUrl.startsWith("gs://")) return getPathOnGcs(fileNameOrUrl);
+        // normal case, we're provided a URL.
+        if (fileNameOrUrl.indexOf(':')>=0) return java.nio.file.Paths.get(URI.create(fileNameOrUrl));
+        // fallback to default filesystem provider for "folder/file" syntax.
+        return java.nio.file.Paths.get(fileNameOrUrl);
     }
 
 

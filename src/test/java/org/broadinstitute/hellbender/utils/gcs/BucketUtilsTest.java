@@ -10,6 +10,8 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 
 public final class BucketUtilsTest extends BaseTest {
@@ -114,6 +116,19 @@ public final class BucketUtilsTest extends BaseTest {
         Assert.assertTrue(fileSize > 0);
         long dirSize = BucketUtils.dirSize(dir.getAbsolutePath(), null);
         Assert.assertEquals(dirSize, fileSize * 2);
+    }
+
+    @Test(groups={"bucket"})
+    public void testGetPath() throws IOException {
+        innerTestGetPath(getGCPTestInputPath() + "large/CEUTrio.HiSeq.WGS.b37.NA12878.20.21.bam");
+        innerTestGetPath("file://" + NA12878_20_21_WGS_bam);
+        innerTestGetPath(NA12878_20_21_WGS_bam);
+    }
+
+    private void innerTestGetPath(String s) throws IOException {
+        Path p = BucketUtils.getPath(s);
+        long size = Files.size(p);
+        Assert.assertTrue(size>0);
     }
 
 }
