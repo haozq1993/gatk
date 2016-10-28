@@ -1,7 +1,6 @@
 package org.broadinstitute.hellbender.utils.io;
 
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
-import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.util.BlockCompressedInputStream;

@@ -28,7 +28,6 @@ import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.io.IOUtils;
 
 import java.io.*;
-import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.file.NoSuchFileException;
 import java.util.Arrays;

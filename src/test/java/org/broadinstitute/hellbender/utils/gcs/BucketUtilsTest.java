@@ -2,7 +2,6 @@ package org.broadinstitute.hellbender.utils.gcs;
 
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import htsjdk.samtools.util.IOUtil;
-import org.broadinstitute.hellbender.utils.io.IOUtils;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.broadinstitute.hellbender.utils.test.MiniClusterUtils;
 import org.testng.Assert;
@@ -11,8 +10,6 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 
 public final class BucketUtilsTest extends BaseTest {
@@ -119,17 +116,5 @@ public final class BucketUtilsTest extends BaseTest {
         Assert.assertEquals(dirSize, fileSize * 2);
     }
 
-    @Test(groups={"bucket"})
-    public void testGetPath() throws IOException {
-        innerTestGetPath(getGCPTestInputPath() + "large/CEUTrio.HiSeq.WGS.b37.NA12878.20.21.bam");
-        innerTestGetPath("file://" + NA12878_20_21_WGS_bam);
-        innerTestGetPath(NA12878_20_21_WGS_bam);
-    }
-
-    private void innerTestGetPath(String s) throws IOException {
-        Path p = IOUtils.getPath(s);
-        long size = Files.size(p);
-        Assert.assertTrue(size>0);
-    }
 
 }
