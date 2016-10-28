@@ -16,7 +16,7 @@ public class PathSeqKmerSparkIntegrationTest extends CommandLineProgramTest {
 
     @Test(groups = "spark")
     public void test() throws Exception {
-        final File expectedSam = getTestFile("kmer.hss");
+        final File expectedFile = getTestFile("kmer.hss");
 
         final File ref = getTestFile("hg19mini.fasta");
         final File output = createTempFile("test", ".hss");
@@ -29,7 +29,7 @@ public class PathSeqKmerSparkIntegrationTest extends CommandLineProgramTest {
         args.addOutput(output);
         this.runCommandLine(args.getArgsArray());
 
-        Assert.assertEquals(FileUtils.readFileToByteArray(output), FileUtils.readFileToByteArray(expectedSam));
+        Assert.assertEquals(FileUtils.readFileToByteArray(output), FileUtils.readFileToByteArray(expectedFile));
     }
 
 }

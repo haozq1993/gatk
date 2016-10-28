@@ -1,11 +1,16 @@
 package org.broadinstitute.hellbender.tools.spark.pathseq;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.github.lindenb.jbwa.jni.ShortRead;
+import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.common.collect.Iterators;
 import htsjdk.samtools.*;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import org.broadinstitute.hellbender.cmdline.Argument;
 import org.broadinstitute.hellbender.cmdline.ArgumentCollection;
 import org.broadinstitute.hellbender.cmdline.CommandLineProgramProperties;
@@ -14,9 +19,12 @@ import org.broadinstitute.hellbender.cmdline.argumentcollections.OpticalDuplicat
 import org.broadinstitute.hellbender.cmdline.programgroups.SparkProgramGroup;
 import org.broadinstitute.hellbender.engine.filters.*;
 import org.broadinstitute.hellbender.engine.spark.GATKSparkTool;
+import org.broadinstitute.hellbender.tools.spark.sv.SVKmerSmall;
+import org.broadinstitute.hellbender.tools.spark.utils.HopscotchSet;
 import org.broadinstitute.hellbender.transformers.BaseQualityClipReadTransformer;
 import org.broadinstitute.hellbender.transformers.DUSTReadTransformer;
 import org.broadinstitute.hellbender.transformers.ReadTransformer;
+import org.broadinstitute.hellbender.utils.gcs.BucketUtils;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.read.ReadUtils;
 import org.broadinstitute.hellbender.utils.read.SAMFileGATKReadWriter;
@@ -64,6 +72,12 @@ public final class PathSeqFilterSpark extends GATKSparkTool {
     @Argument(fullName="pathseq_baseQualFrac", shortName="pathseq_mbaseQualFrac", optional=true)
     public float QUAL_MAX_FRAC = 0.05f;
 
+    @Argument(fullName="pathseq_kmerLibPath", shortName="pathseq_kmerLibPath", optional=false)
+    public String KMER_LIB_PATH;
+
+    @Argument(fullName="pathseq_kmerSize", shortName="pathseq_kmerSize", optional=true)
+    public int KMER_SIZE = 31;
+
     @Override
     public boolean requiresReads() { return true; }
 
@@ -76,6 +90,7 @@ public final class PathSeqFilterSpark extends GATKSparkTool {
     protected OpticalDuplicatesArgumentCollection opticalDuplicatesArgumentCollection = new OpticalDuplicatesArgumentCollection();
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void runTool(final JavaSparkContext ctx) {
 
         header = getHeaderForReads();
@@ -114,12 +129,19 @@ public final class PathSeqFilterSpark extends GATKSparkTool {
         ReadFilter readLengthFilter = new ReadLengthReadFilter(MIN_READ_LENGTH,MAX_READ_LENGTH);
         final JavaRDD<GATKRead> readsLengthFiltered = readsAmbigFiltered.filter(read -> readLengthFilter.test(read));
 
-        //TODO: load Kmer hopscotch set and filter reads containing > 0 matching kmers
+        //Load Kmer hopscotch set and filter reads containing > 0 matching kmer
+        final PipelineOptions options = getAuthenticatedGCSOptions();
+        Input input = new Input(BucketUtils.openFile(KMER_LIB_PATH, options));
+        Kryo kryo=new Kryo();
+        HopscotchSet<SVKmerSmall> kmerLibSet = (HopscotchSet<SVKmerSmall>)kryo.readClassAndObject(input);
+        Broadcast<HopscotchSet<SVKmerSmall>> kmerLibBroadcast = ctx.broadcast(kmerLibSet);
+        ContainsKmerReadFilter readKmerFilter = new ContainsKmerReadFilter(kmerLibBroadcast,KMER_SIZE);
+        final JavaRDD<GATKRead> readsKmerFiltered = readsLengthFiltered.filter(read -> !readKmerFilter.test(read));
 
         //TODO: bwa filtering against user-specified reference
 
         //"Clean" reads by resetting all flags and setting pairedness flags according to the remaining read set
-        final JavaRDD<GATKRead> readsCleaned = readsLengthFiltered
+        final JavaRDD<GATKRead> readsCleaned = readsKmerFiltered
                 .groupBy(read -> read.getName()) //group pairs using read name into set of Iterable<GATKRead>'s
                 .values()   //Get Iterables
                 .map(p -> {     //Determine if Iterable represents 1 or 2 reads and set flags accordingly

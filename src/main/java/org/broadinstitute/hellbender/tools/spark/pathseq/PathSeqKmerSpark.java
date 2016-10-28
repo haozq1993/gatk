@@ -72,6 +72,7 @@ public final class PathSeqKmerSpark extends GATKSparkTool {
         Output output = new Output(BucketUtils.createFile(outputFile, options));
         Kryo kryo=new Kryo();
         kryo.writeClassAndObject(output, kmerSet);
+        output.close();
     }
 
     /** Find kmers in the reference sequence */
