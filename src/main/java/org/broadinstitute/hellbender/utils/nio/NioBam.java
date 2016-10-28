@@ -16,6 +16,7 @@ import htsjdk.samtools.seekablestream.SeekableStream;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.broadinstitute.hellbender.utils.gcs.BucketUtils;
+import org.broadinstitute.hellbender.utils.io.IOUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class NioBam implements Serializable {
     /** Finds the index file, then calls NioBam(bam, index). **/
     public NioBam(String gcsFilename) throws IOException {
         String indexFilename = gcsFilename + ".bai";
-        if (!Files.exists(BucketUtils.getPathOnGcs(indexFilename))) {
+        if (!Files.exists(IOUtils.getPath(indexFilename))) {
             int i = gcsFilename.lastIndexOf('.');
             if (i>=0) {
                 indexFilename = gcsFilename.substring(0, i) + ".bai";
@@ -63,8 +64,8 @@ public class NioBam implements Serializable {
     }
 
     private void init() throws IOException {
-        Path bamPath = BucketUtils.getPathOnGcs(bam);
-        Path bamIndexPath = BucketUtils.getPathOnGcs(index);
+        Path bamPath = IOUtils.getPath(bam);
+        Path bamIndexPath = IOUtils.getPath(index);
         if (!Files.exists(bamPath)) {
             throw new FileNotFoundException(bamPath.toString());
         }
@@ -75,7 +76,7 @@ public class NioBam implements Serializable {
 
     /** Parses the BAM file into SAMRecords. Will be distributed onto at least 'numPartitions' partitions. **/
     public JavaRDD<SAMRecord> getReads(JavaSparkContext ctx, int numPartitions) throws IOException {
-        Path bamPath = BucketUtils.getPathOnGcs(bam);
+        Path bamPath = IOUtils.getPath(bam);
         ChannelAsSeekableStream bamOverNIO = new ChannelAsSeekableStream(Files.newByteChannel(bamPath), bamPath.toString());
         final byte[] index  = getIndex();
         SeekableStream indexInMemory = new ByteArraySeekableStream(index);
@@ -96,7 +97,7 @@ public class NioBam implements Serializable {
         if (null!= indexCache) {
             return indexCache;
         }
-        indexCache = Files.readAllBytes(BucketUtils.getPathOnGcs(index));
+        indexCache = Files.readAllBytes(IOUtils.getPath(index));
         return indexCache;
     }
 

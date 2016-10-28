@@ -1,5 +1,7 @@
 package org.broadinstitute.hellbender.utils.io;
 
+import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
+import com.google.cloud.storage.contrib.nio.CloudStorageFileSystemProvider;
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.cram.build.CramIO;
 import htsjdk.samtools.util.BlockCompressedInputStream;
@@ -13,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.utils.Utils;
+import org.broadinstitute.hellbender.utils.gcs.BucketUtils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -519,6 +522,10 @@ public final class IOUtils {
     public static Path getPath(String uriString) throws IOException {
         URI uri = URI.create(uriString);
         try {
+            // special case GCS, in case the filesystem provider wasn't installed properly but is available.
+            if (CloudStorageFileSystem.URI_SCHEME.equals(uri.getScheme())) {
+                return BucketUtils.getPathOnGcs(uriString);
+            }
             return uri.getScheme() == null ? Paths.get(uriString) : Paths.get(uri);
         } catch (FileSystemNotFoundException e) {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();

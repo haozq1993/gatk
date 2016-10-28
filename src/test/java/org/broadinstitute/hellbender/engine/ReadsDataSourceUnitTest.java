@@ -7,6 +7,7 @@ import htsjdk.samtools.ValidationStringency;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
 import org.broadinstitute.hellbender.utils.gcs.BucketUtils;
+import org.broadinstitute.hellbender.utils.io.IOUtils;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.testng.Assert;
@@ -14,15 +15,23 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
 public final class ReadsDataSourceUnitTest extends BaseTest {
     private static final String READS_DATA_SOURCE_TEST_DIRECTORY = publicTestDir + "org/broadinstitute/hellbender/engine/";
-    private static final Path FIRST_TEST_BAM = BucketUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "reads_data_source_test1.bam");
-    private static final Path SECOND_TEST_BAM =BucketUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "reads_data_source_test2.bam");
-    private static final Path THIRD_TEST_BAM = BucketUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "reads_data_source_test3.bam");
-    private static final Path FIRST_TEST_SAM = BucketUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "invalid_coord_sort_order.sam");
+    private final Path FIRST_TEST_BAM ;
+    private final Path SECOND_TEST_BAM;
+    private final Path THIRD_TEST_BAM ;
+    private final Path FIRST_TEST_SAM ;
+
+    public ReadsDataSourceUnitTest() throws IOException {
+        FIRST_TEST_BAM = IOUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "reads_data_source_test1.bam");
+        SECOND_TEST_BAM =IOUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "reads_data_source_test2.bam");
+        THIRD_TEST_BAM = IOUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "reads_data_source_test3.bam");
+        FIRST_TEST_SAM = IOUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "invalid_coord_sort_order.sam");
+    }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testHandleNullFile() {
@@ -47,18 +56,18 @@ public final class ReadsDataSourceUnitTest extends BaseTest {
     }
 
     @Test(expectedExceptions = UserException.class)
-    public void testHandleUnindexedFileWithIntervals() {
+    public void testHandleUnindexedFileWithIntervals() throws IOException {
         // Cannot initialize a reads source with intervals unless all files are indexed
-        final Path unindexed = BucketUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "unindexed.bam");
+        final Path unindexed = IOUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "unindexed.bam");
         Assert.assertNull(SamFiles.findIndex(unindexed), "Expected file to have no index, but found an index file. " + unindexed.toAbsolutePath());
         ReadsDataSource readsSource = new ReadsDataSource(unindexed);
         readsSource.setTraversalBounds(Arrays.asList(new SimpleInterval("1", 1, 5)));
     }
 
     @Test(expectedExceptions = UserException.class)
-    public void testHandleUnindexedFileQuery() {
+    public void testHandleUnindexedFileQuery() throws IOException {
         // Construction should succeed, since we don't pass in any intervals, but the query should throw.
-        final Path unindexed = BucketUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "unindexed.bam");
+        final Path unindexed = IOUtils.getPath(READS_DATA_SOURCE_TEST_DIRECTORY + "unindexed.bam");
         Assert.assertNull(SamFiles.findIndex(unindexed), "Expected file to have no index, but found an index file" + unindexed.toAbsolutePath());
         ReadsDataSource readsSource = new ReadsDataSource(unindexed);
         readsSource.query(new SimpleInterval("1", 1, 5));
@@ -343,17 +352,17 @@ public final class ReadsDataSourceUnitTest extends BaseTest {
     }
 
     @DataProvider(name = "TraversalWithUnmappedReadsTestData")
-    public Object[][] traversalWithUnmappedReadsTestData() {
+    public Object[][] traversalWithUnmappedReadsTestData() throws IOException {
         // This bam has only mapped reads
-        final Path mappedBam = BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam");
+        final Path mappedBam = IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam");
 
         // This bam has mapped reads from various contigs, plus a few unmapped reads with no mapped mate
-        final Path unmappedBam = BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1_with_unmapped.bam");
+        final Path unmappedBam = IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1_with_unmapped.bam");
 
         // This is a snippet of the CEUTrio.HiSeq.WGS.b37.NA12878 bam from large, with mapped reads
         // from chromosome 20 (with one mapped read having an unmapped mate), plus several unmapped
         // reads with no mapped mate.
-        final Path ceuSnippet = BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/CEUTrio.HiSeq.WGS.b37.NA12878.snippet_with_unmapped.bam");
+        final Path ceuSnippet = IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/CEUTrio.HiSeq.WGS.b37.NA12878.snippet_with_unmapped.bam");
 
         return new Object[][] {
                 // One interval, no unmapped
@@ -423,10 +432,10 @@ public final class ReadsDataSourceUnitTest extends BaseTest {
     }
 
     @DataProvider(name = "QueryUnmappedTestData")
-    public Object[][] queryUnmappedTestData() {
+    public Object[][] queryUnmappedTestData() throws IOException {
         return new Object[][] {
-                { BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1_with_unmapped.bam"), Arrays.asList("u1", "u2", "u3", "u4", "u5") },
-                { BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/CEUTrio.HiSeq.WGS.b37.NA12878.snippet_with_unmapped.bam"), Arrays.asList("g", "h", "h", "i", "i") }
+                { IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1_with_unmapped.bam"), Arrays.asList("u1", "u2", "u3", "u4", "u5") },
+                { IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/CEUTrio.HiSeq.WGS.b37.NA12878.snippet_with_unmapped.bam"), Arrays.asList("g", "h", "h", "i", "i") }
         };
     }
 

@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.utils.gcs;
 
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import htsjdk.samtools.util.IOUtil;
+import org.broadinstitute.hellbender.utils.io.IOUtils;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.broadinstitute.hellbender.utils.test.MiniClusterUtils;
 import org.testng.Assert;
@@ -126,7 +127,7 @@ public final class BucketUtilsTest extends BaseTest {
     }
 
     private void innerTestGetPath(String s) throws IOException {
-        Path p = BucketUtils.getPath(s);
+        Path p = IOUtils.getPath(s);
         long size = Files.size(p);
         Assert.assertTrue(size>0);
     }

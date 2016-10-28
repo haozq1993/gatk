@@ -2,9 +2,12 @@ package org.broadinstitute.hellbender.cmdline.argumentcollections;
 
 import org.broadinstitute.hellbender.cmdline.Argument;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
+import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.utils.gcs.BucketUtils;
+import org.broadinstitute.hellbender.utils.io.IOUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +32,15 @@ public final class RequiredReadInputArgumentCollection extends ReadInputArgument
 
     @Override
     public List<Path> getReadPaths() {
-        ArrayList<Path> ret = new ArrayList<>();
-        for (String fn : readFilesNames) {
-            ret.add(BucketUtils.getPath(fn));
+        try {
+            ArrayList<Path> ret = new ArrayList<>();
+            for (String fn : readFilesNames) {
+                ret.add(IOUtils.getPath(fn));
+            }
+            return ret;
+        } catch (IOException io) {
+            throw new GATKException(io.getMessage());
         }
-        return ret;
     }
 
     @Override

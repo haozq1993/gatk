@@ -7,6 +7,7 @@ import org.broadinstitute.hellbender.engine.filters.ReadFilter;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
 import org.broadinstitute.hellbender.utils.downsampling.ReadsDownsampler;
 import org.broadinstitute.hellbender.utils.gcs.BucketUtils;
+import org.broadinstitute.hellbender.utils.io.IOUtils;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.testng.Assert;
@@ -14,6 +15,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,8 +24,8 @@ import java.util.List;
 public class LocalReadShardUnitTest extends BaseTest {
 
     @DataProvider(name = "InvalidConstructionTestData")
-    public Object[][] invalidConstructionTestData() {
-        final ReadsDataSource readsSource = new ReadsDataSource(BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
+    public Object[][] invalidConstructionTestData() throws IOException {
+        final ReadsDataSource readsSource = new ReadsDataSource(IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
 
         return new Object[][] {
                 { new SimpleInterval("1", 200, 250), new SimpleInterval("1", 200, 250), null },
@@ -43,8 +45,8 @@ public class LocalReadShardUnitTest extends BaseTest {
     }
 
     @DataProvider(name = "ShardBoundsTestData")
-    public Object[][] shardBoundsTestData() {
-        final ReadsDataSource readsSource = new ReadsDataSource(BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
+    public Object[][] shardBoundsTestData() throws IOException {
+        final ReadsDataSource readsSource = new ReadsDataSource(IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
 
         return new Object[][] {
                 {new LocalReadShard(new SimpleInterval("1", 200, 250), readsSource), new SimpleInterval("1", 200, 250), new SimpleInterval("1", 200, 250), "1", 200, 250, 0, 0 },
@@ -67,8 +69,8 @@ public class LocalReadShardUnitTest extends BaseTest {
     }
 
     @DataProvider(name = "ShardContainsTestData")
-    public Object[][] shardContainsTestData() {
-        final ReadsDataSource readsSource = new ReadsDataSource(BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
+    public Object[][] shardContainsTestData() throws IOException {
+        final ReadsDataSource readsSource = new ReadsDataSource(IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
 
         return new Object[][] {
                 // Tests with no padding
@@ -90,8 +92,8 @@ public class LocalReadShardUnitTest extends BaseTest {
     }
 
     @DataProvider(name = "ShardIterationTestData")
-    public Object[][] shardIterationTestData() {
-        final ReadsDataSource readsSource = new ReadsDataSource(BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
+    public Object[][] shardIterationTestData() throws IOException{
+        final ReadsDataSource readsSource = new ReadsDataSource(IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
 
         final ReadFilter keepReadBOnly = new ReadFilter() {
             private static final long serialVersionUID = 1l;
@@ -142,9 +144,9 @@ public class LocalReadShardUnitTest extends BaseTest {
     }
 
     @DataProvider(name = "DivideIntervalIntoShardsTestData")
-    public Object[][] divideIntervalIntoShardsTestData() {
+    public Object[][] divideIntervalIntoShardsTestData() throws IOException {
         // Doesn't matter which bam we use to back the reads source for the purposes of these tests.
-        final ReadsDataSource readsSource = new ReadsDataSource(BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
+        final ReadsDataSource readsSource = new ReadsDataSource(IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
         final SAMSequenceDictionary dictionary = new SAMSequenceDictionary(Arrays.asList(new SAMSequenceRecord("1", 16000)));
 
         return new Object[][] {
@@ -289,8 +291,8 @@ public class LocalReadShardUnitTest extends BaseTest {
     }
 
     @DataProvider(name = "DivideIntervalIntoShardsInvalidTestData")
-    public Object[][] divideIntervalIntoShardsInvalidTestData() {
-        final ReadsDataSource readsSource = new ReadsDataSource(BucketUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
+    public Object[][] divideIntervalIntoShardsInvalidTestData() throws IOException {
+        final ReadsDataSource readsSource = new ReadsDataSource(IOUtils.getPath(publicTestDir + "org/broadinstitute/hellbender/engine/reads_data_source_test1.bam"));
         final SAMSequenceDictionary dictionary = new SAMSequenceDictionary(Arrays.asList(new SAMSequenceRecord("1", 16000)));
 
         return new Object[][] {
