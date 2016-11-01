@@ -6,7 +6,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
 import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.exceptions.UserException;
-import org.broadinstitute.hellbender.utils.read.CigarUtils;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.read.SAMRecordToGATKReadAdapter;
 
@@ -15,6 +14,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 /**
  * A builder class that expands functionality for SA tags. Each SATagBuilder is associated with a {@link GATKRead} at
@@ -39,7 +39,7 @@ public class SATagBuilder {
     private List<SARead> supplementaryReads;
     final private GATKRead read;
     private SARead thisRead;
-
+    final private static String cigarRe = "\\*|([0-9]+[MIDNSHPX=])+";
     public SATagBuilder(GATKRead read) {
         Utils.nonNull(read);
 
@@ -213,21 +213,24 @@ public class SATagBuilder {
         // builder for SARead that parses the existing SA tag
         private SARead(String SATag) {
             String[] values = SATag.split(",", -1);
-            if (values.length == 6) {
-                this.contig = values[0];
-                if (values[1].equals("*") || Integer.parseInt(values[1])>=0) {
-                    this.pos = values[1];
-                }
-                this.strand = values[2];
-                this.cigar = values[3];
-                if (values[4].equals("*") || Integer.parseInt(values[4])>=0) {
-                    this.mapQ = values[4];
-                }
-                this.NM = values[5];
-
-            } else {
+            if (values.length != 6) {
                 throw new GATKException("Could not parse SATag: "+SATag);
             }
+            if (!values[1].equals("*") && Integer.parseInt(values[1]) < 0) {
+                throw new GATKException("Could not parse POS in SATag: "+SATag);
+            }
+            if (!values[3].matches(cigarRe)){
+                throw new GATKException("Could not parse cigar in SATag: " + SATag);
+            }
+            if (!values[4].equals("*") && Integer.parseInt(values[4]) < 0) {
+                throw new GATKException("Could not parse MapQ in SATag: " + SATag);
+            }
+            this.contig = values[0];
+            this.pos = values[1];
+            this.strand = values[2];
+            this.cigar = values[3];
+            this.mapQ = values[4];
+            this.NM = values[5];
         }
 
         private SARead(GATKRead read) {
@@ -278,10 +281,6 @@ public class SATagBuilder {
         }
 
         for (int i = 0; i < supplementalTags.size(); i++) {
-            // Set reads as supplementary
-            if (i != 0) {
-                supplementalTags.get(i).read.setIsSupplementaryAlignment(true);
-            }
             for (int j = 0; j < supplementalTags.size(); j++) {
                 if (i != j) {
                     supplementalTags.get(i).addTag(supplementalTags.get(j));
