@@ -24,7 +24,7 @@ public class SATagBuilderUnitTests {
         primarySup.setMappingQuality(100);
         primarySup.setAttribute("NM",20);
         primarySup.setIsReverseStrand(true);
-        GATKRead secondarySup = ArtificialReadUtils.createArtificialRead(header, "read2", 2, 10001, new byte[] {}, new byte[] {}, "4S");
+        GATKRead secondarySup = ArtificialReadUtils.createArtificialRead(header, "read1", 2, 10001, new byte[] {}, new byte[] {}, "4S");
         secondarySup.setMappingQuality(200);
         List<GATKRead> sups = new ArrayList<>();
         sups.add(secondarySup);
@@ -35,7 +35,7 @@ public class SATagBuilderUnitTests {
         Assert.assertEquals(secondarySup.getAttributeAsString("SA"), "2,10000,-,4M,100,20;");
         Assert.assertEquals(secondarySup.isSupplementaryAlignment(), true);
 
-        GATKRead tertiarySup = ArtificialReadUtils.createArtificialRead(header, "read3", 3, 10003, new byte[] {}, new byte[] {}, "4D");
+        GATKRead tertiarySup = ArtificialReadUtils.createArtificialRead(header, "read1", 3, 10003, new byte[] {}, new byte[] {}, "4D");
         tertiarySup.setMappingQuality(200);
         primarySup.clearAttribute("SA");
         secondarySup.clearAttribute("SA");
@@ -62,17 +62,18 @@ public class SATagBuilderUnitTests {
     public static void testRemoveTagFunctionality() {
         final SAMFileHeader header = ArtificialReadUtils.createArtificialSamHeader();
         GATKRead testRead = ArtificialReadUtils.createArtificialRead(header, "read1", 1, 10002, new byte[] {}, new byte[] {}, "4M");
-        testRead.setAttribute("SA","2,10000,+,4M,100,20;4,10003,+,4D,200,0;2,10000,-,4M,100,20");
+        final String attributeVal = "2,10000,+,4M,100,20;4,10003,+,4D,200,0;2,10000,-,4M,100,20;";
+        testRead.setAttribute("SA", attributeVal);
         SATagBuilder builder = new SATagBuilder(testRead);
 
         // Testing that unrelated reads are not removed from the list
         GATKRead unRelatedRead = ArtificialReadUtils.createArtificialRead(header, "read3", 3, 1000, new byte[] {}, new byte[] {}, "4D");
-        builder.removeTag(unRelatedRead).writeTag();
-        Assert.assertEquals(testRead.getAttributeAsString("SA"),"2,10000,+,4M,100,20;4,10003,+,4D,200,0;2,10000,-,4M,100,20;");
+        builder.removeTag(unRelatedRead).setSATag();
+        Assert.assertEquals(testRead.getAttributeAsString("SA"), attributeVal);
 
         // Testing that ALL instances of a particular tag get removed
         GATKRead relatedRead = ArtificialReadUtils.createArtificialRead(header, "read1", 1, 10000, new byte[] {}, new byte[] {}, "4M");
-        builder.removeTag(relatedRead).writeTag();
+        builder.removeTag(relatedRead).setSATag();
         Assert.assertEquals(testRead.getAttributeAsString("SA"),"4,10003,+,4D,200,0;");
     }
 
@@ -91,7 +92,7 @@ public class SATagBuilderUnitTests {
         GATKRead read3 = ArtificialReadUtils.createArtificialRead(header, "read3", 3, 10003, new byte[] {}, new byte[] {}, "4D");
         read3.setIsSupplementaryAlignment(false);
 
-        builder.addTag(read1).addTag(read3).addTag(read2builder).writeTag();
+        builder.addTag(read1).addTag(read3).addTag(read2builder).setSATag();
         Assert.assertEquals(read.getAttributeAsString("SA"),"4,10003,+,4D,0,*;2,500,+,3S2=1X2=2S,60,1;2,10000,+,4M,0,*;3,10001,+,4S,0,*;");
     }
 
@@ -169,8 +170,6 @@ public class SATagBuilderUnitTests {
         return new Object[][] {{read1},{read2},{read3},{read4}};
     }
 
-    // This feature is waiting on the pull request at https://github.com/samtools/htsjdk/pull/693. Once SAMUtils.getOtherCannonicalAlignment()
-    // is updated to handle '*' for empty NM fields this should no longer produce an exception and "expectedExceptions" can be removed.
     @Test(expectedExceptions = SAMException.class)
     public void testEmptyNMTagSupport() {
         SAMFileHeader header = ArtificialReadUtils.createArtificialSamHeader();

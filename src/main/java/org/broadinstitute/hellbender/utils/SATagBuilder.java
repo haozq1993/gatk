@@ -6,6 +6,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
 import org.broadinstitute.hellbender.exceptions.GATKException;
 import org.broadinstitute.hellbender.exceptions.UserException;
+import org.broadinstitute.hellbender.utils.read.CigarUtils;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import org.broadinstitute.hellbender.utils.read.SAMRecordToGATKReadAdapter;
 
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 /**
  * A builder class that expands functionality for SA tags. Each SATagBuilder is associated with a {@link GATKRead} at
  * construction and supports various options of editing existing SA tags as well as adding new SA tags. NOTE: in order
- * for updates to the SA tag for a given read to be added to the read, {@link SATagBuilder#writeTag()} must be called!
+ * for updates to the SA tag for a given read to be added to the read, {@link SATagBuilder#setSATag()} must be called!
  *
  * When an SATagBuilder is constructed, it will automatically parse any existing SA tag strings on the read into
  * processable units. In order to get the SA tag units as reads, simply call {@link SATagBuilder#getArtificialReadsBasedOnSATag(SAMFileHeader)}.
@@ -58,9 +59,9 @@ public class SATagBuilder {
     }
 
     /**
-     * Writes the stored SA tag information into the SA attribute field of the read encapsulated by the SATagBuilder
+     * Sets the stored SA tag information into the SA attribute field of the read encapsulated by the SATagBuilder
      */
-    public SATagBuilder writeTag() {
+    public SATagBuilder setSATag() {
         if (supplementaryReads.isEmpty()) {
             return this;
         }
@@ -179,6 +180,7 @@ public class SATagBuilder {
     /**
      * Returns a list of artificial GATKReads corresponding to the reads described by the SA tag in read.
      * Fills as much information as can be inferred from the original read onto the artificial read copies
+     * This function is only used for testing (e.g. testGetArtificialReadsBasedOnSATag, testEmptyNMTagSupport)
      *
      * @param header the header to be used in constructing artificial reads
      */
@@ -222,6 +224,7 @@ public class SATagBuilder {
                     this.mapQ = values[4];
                 }
                 this.NM = values[5];
+
             } else {
                 throw new GATKException("Could not parse SATag: "+SATag);
             }
@@ -253,7 +256,7 @@ public class SATagBuilder {
     /**
      * Sets a collection of GATKReads as supplemental reads of the primary read,
      * This tool will set the isSupplemental attribute as well as the 'SA:' tag
-     * properly according to the Samspec (example: SA:primaryreadname,position,strand,Cigar,mapQ,NM;...)
+     * properly according to the Samspec (example: SA:rname,position,strand,Cigar,mapQ,NM;...)
      * Note: this tool will not unset the primary read as supplemental, futhermore it will simply add to any existing
      * SA tags on the given reads.
      *
@@ -287,7 +290,7 @@ public class SATagBuilder {
         }
 
         for (SATagBuilder read : supplementalTags) {
-            read.writeTag();
+            read.setSATag();
         }
     }
 }
