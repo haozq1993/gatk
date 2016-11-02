@@ -1,10 +1,11 @@
 package org.broadinstitute.hellbender;
 
 import htsjdk.samtools.util.StringUtil;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.hellbender.cmdline.ClassFinder;
 import org.broadinstitute.hellbender.cmdline.CommandLineProgram;
-import org.broadinstitute.hellbender.cmdline.CommandLineProgramGroup;
-import org.broadinstitute.hellbender.cmdline.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.utils.ClassUtils;
 
@@ -33,7 +34,7 @@ public class Main {
     private static final String BOLDRED = "\u001B[1m\u001B[31m";
 
     /**
-     * exit value when an issue with the commandline is detected, ie {@link UserException.CommandLineException}.
+     * exit value when an issue with the commandline is detected, ie {@link CommandLineException}.
      * This is the same value as picard uses.
      */
     private static final int COMMANDLINE_EXCEPTION_EXIT_VALUE = 1;
@@ -100,7 +101,7 @@ public class Main {
             if (result != null) {
               System.out.println("Tool returned:\n" + result);
             }
-        } catch (final UserException.CommandLineException e){
+        } catch (final CommandLineException e){
             //the usage has already been printed so don't print it here.
             if(printStackTraceOnUserExceptions()) {
                 e.printStackTrace();

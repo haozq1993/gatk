@@ -1,7 +1,7 @@
 package org.broadinstitute.hellbender.tools.spark.bwa;
 
-import org.broadinstitute.hellbender.cmdline.Argument;
-import org.broadinstitute.hellbender.cmdline.ArgumentCollectionDefinition;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollectionDefinition;
 
 /**
  * Arguments for BWA.

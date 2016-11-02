@@ -1,5 +1,6 @@
 package org.broadinstitute.hellbender.cmdline;
 
+import org.broadinstitute.barclay.argparser.CommandLineProgramGroup;
 /**
  * only for testing
  */

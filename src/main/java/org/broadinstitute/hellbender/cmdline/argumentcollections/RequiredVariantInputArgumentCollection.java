@@ -2,8 +2,8 @@ package org.broadinstitute.hellbender.cmdline.argumentcollections;
 
 
 import htsjdk.variant.variantcontext.VariantContext;
-import org.broadinstitute.hellbender.cmdline.Argument;
-import org.broadinstitute.hellbender.cmdline.ArgumentCollectionDefinition;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollectionDefinition;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
 import org.broadinstitute.hellbender.engine.FeatureInput;
 

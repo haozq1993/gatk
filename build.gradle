@@ -124,6 +124,7 @@ dependencies {
         exclude module: 'servlet-api'
     }
 
+    compile 'org.broadinstitute:barclay:1.0-SNAPSHOT'
     compile 'org.bdgenomics.bdg-formats:bdg-formats:0.5.0'
     compile('org.bdgenomics.adam:adam-core_2.10:0.18.0') {
         exclude group: 'org.slf4j'

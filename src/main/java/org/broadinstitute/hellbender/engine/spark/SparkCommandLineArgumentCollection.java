@@ -1,10 +1,10 @@
 package org.broadinstitute.hellbender.engine.spark;
 
 
-import org.broadinstitute.hellbender.cmdline.Argument;
-import org.broadinstitute.hellbender.cmdline.ArgumentCollectionDefinition;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.ArgumentCollectionDefinition;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
-import org.broadinstitute.hellbender.exceptions.UserException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -33,7 +33,7 @@ public final class SparkCommandLineArgumentCollection implements ArgumentCollect
         for( String property: sparkProperties) {
             final String[] splits = property.split("=");
             if (splits.length != 2 || splits[0].isEmpty() || splits[1].isEmpty()) {
-                throw new UserException.BadArgumentValue(StandardArgumentDefinitions.SPARK_PROPERTY_NAME, property, "Expected a value of the form spark.property.name=value");
+                throw new CommandLineException.BadArgumentValue(StandardArgumentDefinitions.SPARK_PROPERTY_NAME, property, "Expected a value of the form spark.property.name=value");
             } else {
                 propertyMap.put(splits[0], splits[1]);
             }

@@ -7,6 +7,12 @@ import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import org.broadinstitute.hellbender.cmdline.*;
+import org.broadinstitute.barclay.argparser.Argument;
+import org.broadinstitute.barclay.argparser.Advanced;
+import org.broadinstitute.barclay.argparser.CommandLineException;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.PositionalArguments;
+
 import org.broadinstitute.hellbender.cmdline.programgroups.ReadProgramGroup;
 import org.broadinstitute.hellbender.engine.ProgressMeter;
 import org.broadinstitute.hellbender.exceptions.UserException;
@@ -56,7 +62,7 @@ public final class CompareBaseQualities extends PicardCommandLineProgram {
     @Override
     protected Object doWork() {
         if (roundDown && (staticQuantizationQuals == null || staticQuantizationQuals.isEmpty())){
-            throw new UserException.BadArgumentValue("round_down_quantized", "true", "This option can only be used if static_quantized_quals is also used");
+            throw new CommandLineException.BadArgumentValue("round_down_quantized", "true", "This option can only be used if static_quantized_quals is also used");
         }
         staticQuantizedMapping = constructStaticQuantizedMapping(staticQuantizationQuals, roundDown);
 

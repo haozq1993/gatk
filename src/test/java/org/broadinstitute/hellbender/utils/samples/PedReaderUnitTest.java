@@ -9,9 +9,9 @@ import org.testng.annotations.Test;
 import java.io.StringReader;
 import java.util.*;
 
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.broadinstitute.hellbender.utils.Utils;
-import org.broadinstitute.hellbender.exceptions.UserException;
 
 /**
  * UnitTest for PedReader
@@ -294,12 +294,12 @@ public class PedReaderUnitTest extends BaseTest {
         Assert.assertEquals(test.expected, parsed, "Failed to properly parse tags " + test.tags);
     }
 
-    @Test(enabled = true, expectedExceptions = UserException.class)
+    @Test(enabled = true, expectedExceptions = CommandLineException.class)
     public void testPedReaderTagParsing1() {
         EnumSet<PedReader.MissingPedField> parsed = PedReader.parseMissingFieldTags("test", Arrays.asList("XXX"));
     }
 
-    @Test(enabled = true, expectedExceptions = UserException.class)
+    @Test(enabled = true, expectedExceptions = CommandLineException.class)
     public void testPedReaderTagParsing2() {
         EnumSet<PedReader.MissingPedField> parsed = PedReader.parseMissingFieldTags("test", Arrays.asList("NO_SEX", "XXX"));
     }

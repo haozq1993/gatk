@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.exceptions;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.tribble.Feature;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.hellbender.tools.walkers.variantutils.ValidateVariants;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
 import org.broadinstitute.hellbender.utils.help.HelpConstants;
@@ -84,37 +85,6 @@ public class UserException extends RuntimeException {
         private static final long serialVersionUID = 0L;
 
         public MissingReference(String message) { super(message); }
-    }
-
-    /**
-     * If this exception is thrown during commandline parsing, help will be displayed.
-     */
-    public static class CommandLineException extends UserException {
-        private static final long serialVersionUID = 0L;
-
-        public CommandLineException() {
-            super();
-        }
-
-        public CommandLineException(String message) {
-            super(String.format("Invalid command line: %s", message));
-        }
-    }
-
-    public static class BadArgumentValue extends CommandLineException {
-        private static final long serialVersionUID = 0L;
-
-        public BadArgumentValue(String arg, String value) {
-            super(String.format("Argument %s has a bad value: %s", arg, value));
-        }
-
-        public BadArgumentValue(String arg, String value, String message){
-            super(String.format("Argument %s has a bad value: %s. %s", arg, value,message));
-        }
-
-        public BadArgumentValue(String message) {
-            super(String.format("Illegal argument value: %s", message));
-        }
     }
 
     public static class CannotHandleGzippedRef extends UserException {
@@ -269,15 +239,6 @@ public class UserException extends RuntimeException {
         private static final long serialVersionUID = 0L;
         public CannotExecuteRScript(String message) {
             super(String.format("Unable to execute RScript command: " + message));
-        }
-    }
-
-    // todo -- fix up exception cause passing
-    public static class MissingArgument extends CommandLineException {
-        private static final long serialVersionUID = 0L;
-
-        public MissingArgument(String arg, String message) {
-            super(String.format("Argument %s was missing: %s", arg, message));
         }
     }
 

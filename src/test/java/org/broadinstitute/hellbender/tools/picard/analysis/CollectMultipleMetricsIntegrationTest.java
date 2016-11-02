@@ -5,7 +5,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.Header;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.broadinstitute.hellbender.CommandLineProgramTest;
-import org.broadinstitute.hellbender.cmdline.CommandLineProgramProperties;
+import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.hellbender.cmdline.StandardArgumentDefinitions;
 import org.broadinstitute.hellbender.cmdline.programgroups.TestSparkProgramGroup;
 import org.broadinstitute.hellbender.metrics.InsertSizeMetrics;

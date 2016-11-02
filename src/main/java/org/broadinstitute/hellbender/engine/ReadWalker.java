@@ -1,6 +1,7 @@
 package org.broadinstitute.hellbender.engine;
 
-import org.broadinstitute.hellbender.cmdline.GATKPlugin.GATKCommandLinePluginDescriptor;
+import org.broadinstitute.barclay.argparser.CommandLinePluginDescriptor;
+
 import org.broadinstitute.hellbender.cmdline.GATKPlugin.GATKReadFilterPluginDescriptor;
 import org.broadinstitute.hellbender.engine.filters.ReadFilter;
 import org.broadinstitute.hellbender.engine.filters.WellformedReadFilter;
@@ -35,11 +36,11 @@ public abstract class ReadWalker extends GATKTool {
     public static final int FEATURE_CACHE_LOOKAHEAD = 1_000;
 
     /**
-     * Return the list of GATKCommandLinePluginDescriptors to be used for this tool.
+     * Return the list of CommandLinePluginDescriptors to be used for this tool.
      * Uses the read filter plugin.
      */
     @Override
-    protected List<? extends GATKCommandLinePluginDescriptor<?>> getPluginDescriptors() {
+    protected List<? extends CommandLinePluginDescriptor<?>> getPluginDescriptors() {
         return Collections.singletonList(new GATKReadFilterPluginDescriptor(getDefaultReadFilters()));
     }
 

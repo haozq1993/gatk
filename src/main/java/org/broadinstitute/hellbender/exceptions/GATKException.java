@@ -26,23 +26,6 @@ public class GATKException extends RuntimeException {
 
     /**
      * <p/>
-     * Class GATKException.CommandLineParserInternalException
-     * <p/>
-     * For internal errors in the command line parser not related to syntax errors in the command line itself.
-     */
-    public static class CommandLineParserInternalException extends GATKException {
-        private static final long serialVersionUID = 0L;
-        public CommandLineParserInternalException( final String s ) {
-            super(s);
-        }
-
-        public CommandLineParserInternalException( final String s, final Throwable throwable ) {
-            super(s, throwable);
-        }
-    }
-
-    /**
-     * <p/>
      * For wrapping errors that are believed to never be reachable
      */
     public static class ShouldNeverReachHereException extends GATKException {

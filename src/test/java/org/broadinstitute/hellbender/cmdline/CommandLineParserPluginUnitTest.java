@@ -1,8 +1,8 @@
 package org.broadinstitute.hellbender.cmdline;
 
-import org.broadinstitute.hellbender.cmdline.GATKPlugin.GATKCommandLinePluginDescriptor;
+import org.broadinstitute.barclay.argparser.*;
 import org.broadinstitute.hellbender.cmdline.programgroups.QCProgramGroup;
-import org.broadinstitute.hellbender.exceptions.GATKException;
+import org.broadinstitute.barclay.argparser.CommandLineException.CommandLineParserInternalException;
 import org.broadinstitute.hellbender.exceptions.UserException;
 import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.testng.Assert;
@@ -29,7 +29,7 @@ public class CommandLineParserPluginUnitTest {
         Integer argumentForTestPlugin;
     }
 
-    public static class TestPluginDescriptor extends GATKCommandLinePluginDescriptor<TestPluginBase> {
+    public static class TestPluginDescriptor extends CommandLinePluginDescriptor<TestPluginBase> {
 
         final String pluginNamesArgName = "pluginName";
 
@@ -86,7 +86,7 @@ public class CommandLineParserPluginUnitTest {
             pluginNames.forEach(s -> {
                 TestPluginBase trf = pluginInstances.get(s);
                 if (null == trf) {
-                    throw new UserException.CommandLineException("Unrecognized test plugin name: " + s);
+                    throw new CommandLineException("Unrecognized test plugin name: " + s);
                 }
                 else {
                     requestedPlugins.put(s, trf);
@@ -109,7 +109,7 @@ public class CommandLineParserPluginUnitTest {
     @CommandLineProgramProperties(
             summary = "Plugin Test",
             oneLineSummary = "Plugin test",
-            programGroup = QCProgramGroup.class
+            programGroup = TestProgramGroup.class
     )
     public class PlugInTest {
     }
@@ -126,7 +126,7 @@ public class CommandLineParserPluginUnitTest {
     public void testPlugin(final String[] args, final int expectedInstanceCount){
 
         PlugInTest plugInTest = new PlugInTest();
-        final CommandLineParser clp = new CommandLineParser(
+        final CommandLineArgumentParser clp = new CommandLineArgumentParser(
                 plugInTest,
                 Collections.singletonList(new TestPluginDescriptor()));
 
@@ -143,7 +143,7 @@ public class CommandLineParserPluginUnitTest {
     @Test
     public void testPluginUsage() {
         PlugInTest plugInTest = new PlugInTest();
-        final CommandLineParser clp = new CommandLineParser(
+        final CommandLineArgumentParser clp = new CommandLineArgumentParser(
                 plugInTest,
                 Collections.singletonList(new TestPluginDescriptor()));
         final String out = BaseTest.captureStderr(() -> clp.usage(System.err, true)); // with common args
@@ -176,7 +176,7 @@ public class CommandLineParserPluginUnitTest {
         Integer argumentForTestPlugin;
     }
 
-    public static class TestPluginArgCollisionDescriptor extends GATKCommandLinePluginDescriptor<TestPluginArgCollisionBase> {
+    public static class TestPluginArgCollisionDescriptor extends CommandLinePluginDescriptor<TestPluginArgCollisionBase> {
 
         final String pluginNamesArgName = "pluginName";
 
@@ -233,7 +233,7 @@ public class CommandLineParserPluginUnitTest {
             pluginNames.forEach(s -> {
                 TestPluginArgCollisionBase trf = pluginInstances.get(s);
                 if (null == trf) {
-                    throw new UserException.CommandLineException("Unrecognized test plugin name: " + s);
+                    throw new CommandLineException("Unrecognized test plugin name: " + s);
                 }
                 else {
                     requestedPlugins.put(s, trf);
@@ -269,11 +269,11 @@ public class CommandLineParserPluginUnitTest {
         };
     }
 
-    @Test(dataProvider = "pluginCollisionTests", expectedExceptions=GATKException.CommandLineParserInternalException.class)
+    @Test(dataProvider = "pluginCollisionTests", expectedExceptions=CommandLineParserInternalException.class)
     public void testPluginCollision(final String[] args, final int expectedInstanceCount){
 
         PlugInCollisionTest plugInCollisionTest = new PlugInCollisionTest();
-        new CommandLineParser(
+        new CommandLineArgumentParser(
                 plugInCollisionTest,
                 Collections.singletonList(new TestPluginArgCollisionDescriptor()));
     }

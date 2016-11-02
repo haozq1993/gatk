@@ -1,6 +1,7 @@
 package org.broadinstitute.hellbender.tools.spark;
 
 import htsjdk.samtools.ValidationStringency;
+import org.broadinstitute.barclay.argparser.CommandLineException;
 import org.broadinstitute.hellbender.CommandLineProgramTest;
 import org.broadinstitute.hellbender.engine.datasources.ReferenceAPISource;
 import org.broadinstitute.hellbender.exceptions.UserException;
@@ -268,7 +269,7 @@ public final class BaseRecalibratorSparkIntegrationTest extends CommandLineProgr
         IntegrationTestSpec spec = new IntegrationTestSpec(
                 params.getCommandLine(),
                 1,
-                UserException.CommandLineException.class);
+                CommandLineException.class);
         spec.executeTest("testBQSRFailWithoutDBSNP", this);
     }
 

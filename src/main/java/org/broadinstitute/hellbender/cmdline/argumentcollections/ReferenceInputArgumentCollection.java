@@ -1,6 +1,6 @@
 package org.broadinstitute.hellbender.cmdline.argumentcollections;
 
-import org.broadinstitute.hellbender.cmdline.ArgumentCollectionDefinition;
+import org.broadinstitute.barclay.argparser.ArgumentCollectionDefinition;
 
 import java.io.File;
 
