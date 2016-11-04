@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.broadinstitute.hellbender.tools.spark.sv.BreakpointAllele.BreakpointAlleleInversion;
-
 /**
  * Holds information about a split alignment of a contig, which may represent an SV breakpoint. Each ChimericAlignment
  * represents the junction on the contig of two aligned regions. For example, if a contig aligns to three different regions

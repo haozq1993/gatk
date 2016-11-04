@@ -51,7 +51,7 @@ for (i in seq_len(nrow(summary))) {
   cpg_coverage = split(cur_details$TOTAL_SITES, coverage_cut)
   coverages = sapply(cpg_coverage, length)[2:7]
   names(coverages) = paste(">=", c(1, 5, 10, 25, 50, 100), sep="")
-  ## If we have 0s all across the pie chart will be effectively meaningless but put in a 100% >= 0 auxStruct instead
+  ## If we have 0s all across the pie chart will be effectively meaningless but put in a 100% >= 0 field instead
   ## to avoid an error on pie(). Normally it'd just be a pain to see these, but ...
   if (all(coverages == 0)) {
     coverages = c("No Coverage"=1)
