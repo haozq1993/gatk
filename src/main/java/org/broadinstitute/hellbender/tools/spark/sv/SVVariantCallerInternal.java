@@ -50,7 +50,9 @@ class SVVariantCallerInternal implements Serializable {
      * @param breakpointIdAndAssembledBreakpoint    the inner Tuple2 is a pair of (asmID, contigID) for the contig that generated this chimeric alignment
      */
     static Tuple2<BreakpointAllele, Tuple2<Tuple2<String,String>, ChimericAlignment>> keyByBreakpointAllele(final Tuple2<Tuple2<String, String>, ChimericAlignment> breakpointIdAndAssembledBreakpoint) {
-        final BreakpointAllele breakpointAllele = new BreakpointAllele.BreakpointAlleleInversion(breakpointIdAndAssembledBreakpoint._2);// breakpointIdAndAssembledBreakpoint._2.makeBreakpointAllele();
+        final ChimericAlignment chimericAlignment = breakpointIdAndAssembledBreakpoint._2();
+        // TODO: 11/4/16 INSDEL calling should add another kind of BreakpointAllele here
+        final BreakpointAllele breakpointAllele = SVVariantCallerUtils.supportsInversionNaive(chimericAlignment) ? new BreakpointAllele.BreakpointAlleleInversion(chimericAlignment) : new BreakpointAllele(chimericAlignment);
         return new Tuple2<>(breakpointAllele, new Tuple2<>(breakpointIdAndAssembledBreakpoint._1, breakpointIdAndAssembledBreakpoint._2));
     }
 

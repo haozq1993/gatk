@@ -177,37 +177,4 @@ class ChimericAlignment {
             return new Tuple2<>(leftBreakpoint, rightBreakpoint);
         }
     }
-
-    // -----------------------------------------------------------------------------------------------
-    //
-    // -----------------------------------------------------------------------------------------------
-//    ////////////////////////////////////////
-//    // inversion specific
-//    ////////////////////////////////////////
-//    /**
-//     * Returns the canonical representation of the breakpoint implied by this split contig alignment,
-//     * including whether it is a 3-5 or 5-3 inversion, and the homology and inserted sequence at the
-//     * breakpoint. The two intervals returned are 1bp intervals indicating the exact breakpoint
-//     * location. If there is homology at the breakpoint, the breakpoint locations will be left
-//     * aligned.
-//     */
-//    /**
-//     * Construct an {@link BreakpointAllele} with appropriate annotations (e.g. what types of potential variants).
-//     */
-//    final BreakpointAllele makeBreakpointAllele() {
-//        final Tuple2<SimpleInterval, SimpleInterval> leftAndRightBreakpointsOnReferenceLeftAlignedForHomology = getLeftAndRightBreakpointsOnReferenceLeftAlignedForHomology();
-//        final SimpleInterval leftAlignedLeftBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._1();
-//        final SimpleInterval leftAlignedRightBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._2();
-//
-//        final boolean isFiveToThreeInversion = region1.forwardStrand && !region2.forwardStrand;
-//        final boolean isThreeToFiveInversion = !region1.forwardStrand && region2.forwardStrand;
-//
-//        if (!leftAlignedLeftBreakpointOnAssembledContig.getContig().equals(leftAlignedRightBreakpointOnAssembledContig.getContig())) {
-//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-//        } else if (leftAlignedLeftBreakpointOnAssembledContig.getStart() < leftAlignedRightBreakpointOnAssembledContig.getStart()) {
-//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-//        } else {
-//            return new BreakpointAlleleInversion(leftAlignedRightBreakpointOnAssembledContig, leftAlignedLeftBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-//        }
-//    }
 }

@@ -40,15 +40,12 @@ class BreakpointAllele {
         if (!leftAlignedLeftBreakpointOnAssembledContig.getContig().equals(leftAlignedRightBreakpointOnAssembledContig.getContig())) {
             this.leftAlignedLeftBreakpoint = leftAlignedLeftBreakpointOnAssembledContig;
             this.leftAlignedRightBreakpoint = leftAlignedRightBreakpointOnAssembledContig;
-//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
         } else if (leftAlignedLeftBreakpointOnAssembledContig.getStart() < leftAlignedRightBreakpointOnAssembledContig.getStart()) {
             this.leftAlignedLeftBreakpoint = leftAlignedLeftBreakpointOnAssembledContig;
             this.leftAlignedRightBreakpoint = leftAlignedRightBreakpointOnAssembledContig;
-//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
         } else {
             this.leftAlignedLeftBreakpoint = leftAlignedRightBreakpointOnAssembledContig;
             this.leftAlignedRightBreakpoint = leftAlignedLeftBreakpointOnAssembledContig;
-//            return new BreakpointAlleleInversion(leftAlignedRightBreakpointOnAssembledContig, leftAlignedLeftBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
         }
 
         this.insertedSequence = chimericAlignment.insertedSequence;
@@ -171,10 +168,6 @@ class BreakpointAllele {
         public int hashCode() {
             return Objects.hash(leftAlignedLeftBreakpoint, leftAlignedRightBreakpoint, insertedSequence, homology, 2659*inversionType.ordinal());
         }
-
-        ////////////////////////////////////////
-        // inversion specific
-        ////////////////////////////////////////
 
         enum InversionType  {
             INV_3_TO_5, INV_5_TO_3, INV_NONE
