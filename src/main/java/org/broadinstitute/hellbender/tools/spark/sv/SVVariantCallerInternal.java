@@ -13,6 +13,7 @@ import org.broadinstitute.hellbender.utils.SimpleInterval;
 import scala.Tuple2;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,10 +21,10 @@ import static org.broadinstitute.hellbender.tools.spark.sv.BreakpointAllele.Brea
 import static org.broadinstitute.hellbender.tools.spark.sv.BreakpointAllele.BreakpointAlleleInversion.InversionType.INV_5_TO_3;
 
 /**
- * ABC for calling SV variants.
- * Different types of variants require different logic hence should override.
+ * Internal caller for calling structural variants.
  */
-class SVVariantCallerInternal {
+class SVVariantCallerInternal implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * First step in calling variants: parse all alignment records for a single assembled contig and generate
@@ -34,7 +35,7 @@ class SVVariantCallerInternal {
      * @param minAlignLength                minimum
      * @return                              the chimeric alignments of this sequence (empty if the sequence does not have any alignments)
      */
-    final Iterable<ChimericAlignment> assembleBreakpointsFromAlignmentRegions(final byte[] contigSequence, final Iterable<AlignmentRegion> alignmentRegionsIterable, final Integer minAlignLength) {
+    static Iterable<ChimericAlignment> assembleBreakpointsFromAlignmentRegions(final byte[] contigSequence, final Iterable<AlignmentRegion> alignmentRegionsIterable, final Integer minAlignLength) {
         final List<AlignmentRegion> alignmentRegions = IterableUtils.toList(alignmentRegionsIterable);
         if (alignmentRegions.size() > 1) { // todo: should remove this if checking and always sort when the input is guaranteed to be of size > 1
             alignmentRegions.sort(Comparator.comparing(a -> a.startInAssembledContig));
@@ -49,7 +50,7 @@ class SVVariantCallerInternal {
      * @param breakpointIdAndAssembledBreakpoint    the inner Tuple2 is a pair of (asmID, contigID) for the contig that generated this chimeric alignment
      */
     static Tuple2<BreakpointAllele, Tuple2<Tuple2<String,String>, ChimericAlignment>> keyByBreakpointAllele(final Tuple2<Tuple2<String, String>, ChimericAlignment> breakpointIdAndAssembledBreakpoint) {
-        final BreakpointAllele breakpointAllele = breakpointIdAndAssembledBreakpoint._2.makeBreakpointAllele();
+        final BreakpointAllele breakpointAllele = new BreakpointAllele.BreakpointAlleleInversion(breakpointIdAndAssembledBreakpoint._2);// breakpointIdAndAssembledBreakpoint._2.makeBreakpointAllele();
         return new Tuple2<>(breakpointAllele, new Tuple2<>(breakpointIdAndAssembledBreakpoint._1, breakpointIdAndAssembledBreakpoint._2));
     }
 
@@ -60,8 +61,8 @@ class SVVariantCallerInternal {
      * @param broadcastReference                broadcasted reference
      * @throws IOException                      due to read operations on the reference
      */
-    final VariantContext getVariantFromBreakpointAlleleAlignments(final Tuple2<BreakpointAllele, Iterable<Tuple2<Tuple2<String, String>, ChimericAlignment>>> assembledBreakpointsPerAllele,
-                                                                  final Broadcast<ReferenceMultiSource> broadcastReference) throws IOException {
+    static VariantContext getVariantFromBreakpointAlleleAlignments(final Tuple2<BreakpointAllele, Iterable<Tuple2<Tuple2<String, String>, ChimericAlignment>>> assembledBreakpointsPerAllele,
+                                                                   final Broadcast<ReferenceMultiSource> broadcastReference) throws IOException {
 
         final BreakpointAllele breakpointAllele = assembledBreakpointsPerAllele._1;
         final String contig = breakpointAllele.leftAlignedLeftBreakpoint.getContig();
@@ -81,7 +82,7 @@ class SVVariantCallerInternal {
     // -----------------------------------------------------------------------------------------------
 
     @VisibleForTesting
-    protected List<ChimericAlignment> getBreakpointAlignmentsFromAlignmentRegions(final byte[] sequence, final List<AlignmentRegion> alignmentRegionList, final Integer minAlignLength) {
+    static List<ChimericAlignment> getBreakpointAlignmentsFromAlignmentRegions(final byte[] sequence, final List<AlignmentRegion> alignmentRegionList, final Integer minAlignLength) {
         if (alignmentRegionList.isEmpty()) {
             return new ArrayList<>();
         }
@@ -124,22 +125,22 @@ class SVVariantCallerInternal {
         return results;
     }
     // TODO: 11/2/16 test
-    protected boolean currentAlignmentRegionIsTooSmall(final AlignmentRegion current, final AlignmentRegion next, final Integer minAlignLength) {
+    static boolean currentAlignmentRegionIsTooSmall(final AlignmentRegion current, final AlignmentRegion next, final Integer minAlignLength) {
         return current.referenceInterval.size() - current.overlapOnContig(next) < minAlignLength;
     }
     // TODO: 11/2/16 test
-    protected boolean treatAlignmentRegionAsInsertion(final AlignmentRegion next) {
+    static boolean treatAlignmentRegionAsInsertion(final AlignmentRegion next) {
         return next.mapQual < 60;
     }
     @VisibleForTesting
-    protected boolean treatNextAlignmentRegionInPairAsInsertion(final AlignmentRegion current, final AlignmentRegion next, final Integer minAlignLength) {
+    static boolean treatNextAlignmentRegionInPairAsInsertion(final AlignmentRegion current, final AlignmentRegion next, final Integer minAlignLength) {
         return treatAlignmentRegionAsInsertion(next) ||
                 (next.referenceInterval.size() - current.overlapOnContig(next) < minAlignLength) ||
                 current.referenceInterval.contains(next.referenceInterval) ||
                 next.referenceInterval.contains(current.referenceInterval);
     }
     // TODO: 11/2/16 test
-    protected String getHomology(final AlignmentRegion current, final AlignmentRegion previous, final byte[] sequenceCopy) {
+    static String getHomology(final AlignmentRegion current, final AlignmentRegion previous, final byte[] sequenceCopy) {
         String homology = "";
         if (previous.endInAssembledContig >= current.startInAssembledContig) {
             final byte[] homologyBytes = Arrays.copyOfRange(sequenceCopy, current.startInAssembledContig - 1, previous.endInAssembledContig);
@@ -151,7 +152,7 @@ class SVVariantCallerInternal {
         return homology;
     }
     // TODO: 11/2/16 test
-    protected String getInsertedSequence(final AlignmentRegion current, final AlignmentRegion previous, final byte[] sequenceCopy) {
+    static String getInsertedSequence(final AlignmentRegion current, final AlignmentRegion previous, final byte[] sequenceCopy) {
         String insertedSequence = "";
         if (previous.endInAssembledContig < current.startInAssembledContig - 1) {
 
@@ -177,7 +178,9 @@ class SVVariantCallerInternal {
     /**
      * Auxiliary struct for extracting information from {@link BreakpointAllele.BreakpointAlleleInversion} to make the call.
      */
-    static final class Field {
+    static final class AuxStruct implements Serializable {
+        private static final long serialVersionUID = 1L;
+
         int numAssembledBreakpoints;
         int highMqMappings;
         int maxAlignLength;
@@ -188,7 +191,7 @@ class SVVariantCallerInternal {
         final List<String> assembledContigIds;
         final List<String> insertionMappings;
 
-        Field(final List<Tuple2<Tuple2<String, String>, ChimericAlignment>> assembledBreakpoints){
+        AuxStruct(final List<Tuple2<Tuple2<String, String>, ChimericAlignment>> assembledBreakpoints){
             numAssembledBreakpoints = 0;
             highMqMappings = 0;
             maxAlignLength = 0;
@@ -225,39 +228,39 @@ class SVVariantCallerInternal {
         }
     }
 
-    List<Allele> produceAlleles(final ReferenceMultiSource reference, final String contig, final int start, final int end) throws IOException {
+    static List<Allele> produceAlleles(final ReferenceMultiSource reference, final String contig, final int start, final int end) throws IOException {
         return new ArrayList<>(Arrays.asList(Allele.create(new String(reference.getReferenceBases(null, new SimpleInterval(contig, start, start)).getBases()), true), Allele.create("<INV>")));
     }
 
-    String produceVariantId(final BreakpointAllele breakpointAllele) {
+    static String produceVariantId(final BreakpointAllele breakpointAllele) {
         final BreakpointAllele.BreakpointAlleleInversion inversionAllele = (BreakpointAllele.BreakpointAlleleInversion) breakpointAllele;
         return inversionAllele.getInversionType().name() + "_" + inversionAllele.leftAlignedLeftBreakpoint.getContig() + "_" + inversionAllele.leftAlignedLeftBreakpoint.getStart() + "_" + inversionAllele.leftAlignedRightBreakpoint.getStart();
     }
 
-    VariantContextBuilder updateAttributes(VariantContextBuilder vcBuilder, final BreakpointAllele breakpointAllele,
+    static VariantContextBuilder updateAttributes(VariantContextBuilder vcBuilder, final BreakpointAllele breakpointAllele,
                                            final Iterable<Tuple2<Tuple2<String, String>, ChimericAlignment>> alignments,
                                            final int start, final int end){
 
         final BreakpointAllele.BreakpointAlleleInversion inversionAllele = (BreakpointAllele.BreakpointAlleleInversion) breakpointAllele;
-        final SVVariantCallerInternal.Field field = new SVVariantCallerInternal.Field(IterableUtils.toList(alignments));
+        final AuxStruct auxStruct = new AuxStruct(IterableUtils.toList(alignments));
 
         vcBuilder = vcBuilder.attribute(VCFConstants.END_KEY, end)
                 .attribute(GATKSVVCFHeaderLines.SVTYPE, GATKSVVCFHeaderLines.SVTYPES.INV.toString())
                 .attribute(GATKSVVCFHeaderLines.SVLEN, end - start)
-                .attribute(GATKSVVCFHeaderLines.TOTAL_MAPPINGS, field.numAssembledBreakpoints)
-                .attribute(GATKSVVCFHeaderLines.HQ_MAPPINGS, field.highMqMappings)
-                .attribute(GATKSVVCFHeaderLines.MAPPING_QUALITIES, field.mqs.stream().map(String::valueOf).sorted().collect(Collectors.joining(",")))
-                .attribute(GATKSVVCFHeaderLines.ALIGN_LENGTHS, field.alignLengths.stream().map(String::valueOf).sorted().collect(Collectors.joining(",")))
-                .attribute(GATKSVVCFHeaderLines.MAX_ALIGN_LENGTH, field.maxAlignLength)
-                .attribute(GATKSVVCFHeaderLines.ASSEMBLY_IDS, field.breakpointIds.stream().sorted().collect(Collectors.joining(",")))
-                .attribute(GATKSVVCFHeaderLines.CONTIG_IDS, field.assembledContigIds.stream().map(s -> s.replace(" ", "_")).sorted().collect(Collectors.joining(",")));
+                .attribute(GATKSVVCFHeaderLines.TOTAL_MAPPINGS, auxStruct.numAssembledBreakpoints)
+                .attribute(GATKSVVCFHeaderLines.HQ_MAPPINGS, auxStruct.highMqMappings)
+                .attribute(GATKSVVCFHeaderLines.MAPPING_QUALITIES, auxStruct.mqs.stream().map(String::valueOf).sorted().collect(Collectors.joining(",")))
+                .attribute(GATKSVVCFHeaderLines.ALIGN_LENGTHS, auxStruct.alignLengths.stream().map(String::valueOf).sorted().collect(Collectors.joining(",")))
+                .attribute(GATKSVVCFHeaderLines.MAX_ALIGN_LENGTH, auxStruct.maxAlignLength)
+                .attribute(GATKSVVCFHeaderLines.ASSEMBLY_IDS, auxStruct.breakpointIds.stream().sorted().collect(Collectors.joining(",")))
+                .attribute(GATKSVVCFHeaderLines.CONTIG_IDS, auxStruct.assembledContigIds.stream().map(s -> s.replace(" ", "_")).sorted().collect(Collectors.joining(",")));
 
         if (inversionAllele.insertedSequence.length() > 0) {
             vcBuilder = vcBuilder.attribute(GATKSVVCFHeaderLines.INSERTED_SEQUENCE, inversionAllele.insertedSequence);
         }
 
-        if (field.insertionMappings.size() > 0) {
-            vcBuilder = vcBuilder.attribute(GATKSVVCFHeaderLines.INSERTED_SEQUENCE_MAPPINGS, field.insertionMappings.stream().sorted().collect(Collectors.joining("|")));
+        if (auxStruct.insertionMappings.size() > 0) {
+            vcBuilder = vcBuilder.attribute(GATKSVVCFHeaderLines.INSERTED_SEQUENCE_MAPPINGS, auxStruct.insertionMappings.stream().sorted().collect(Collectors.joining("|")));
         }
 
         if (inversionAllele.homology.length() > 0) {

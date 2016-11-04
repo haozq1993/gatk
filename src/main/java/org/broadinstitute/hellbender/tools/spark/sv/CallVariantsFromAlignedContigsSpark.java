@@ -63,7 +63,7 @@ public final class CallVariantsFromAlignedContigsSpark extends GATKSparkTool {
         final JavaPairRDD<Tuple2<String, String>, Tuple2<Iterable<AlignmentRegion>, byte[]>> alignmentRegionsWithContigSequences = prepAlignmentRegionsForCalling(ctx, inputAlignments, inputAssemblies);
 
         final JavaRDD<VariantContext> variants = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsWithContigSequences, minAlignLength).cache();
-        log.info("Called " + variants.count() + " inversions");
+        log.info("Called " + variants.count() + " variants");
 
         SVVCFWriter.writeVCF(getAuthenticatedGCSOptions(), outputPath, INVERSIONS_OUTPUT_VCF, fastaReference, variants);
     }
@@ -112,18 +112,12 @@ public final class CallVariantsFromAlignedContigsSpark extends GATKSparkTool {
 
         final JavaPairRDD<BreakpointAllele, Iterable<Tuple2<Tuple2<String, String>, ChimericAlignment>>> groupedBreakpoints =
                 alignmentRegionsWithContigSequences
-                        .filter(pair -> Iterables.size(pair._2()._1())>1 )          // added a filter step to filter out any contigs that has less than two alignment records
-                        .flatMapValues(alignmentRegionsAndSequences -> {
-                            final SVVariantCallerInternal worker = new SVVariantCallerInternal(); // todo: works for now, but definitely a hack
-                            return worker.assembleBreakpointsFromAlignmentRegions(alignmentRegionsAndSequences._2, alignmentRegionsAndSequences._1, minAlignLength);
-                        })                                                          // contig -> { Tuple2<Tuple2<String, String>, ChimericAlignment> }          1 -> variable
-                        .mapToPair(SVVariantCallerInternal::keyByBreakpointAllele)  // prepare for consensus (generate key that will be used in consensus step) 1 -> 1
-                        .groupByKey()                                               // consensus                                                                variable -> 1
-                        .filter(pair -> SVVariantCallerUtils.isInversion(pair._1()));               // hack
+                        .filter(pair -> Iterables.size(pair._2()._1())>1 )              // added a filter step to filter out any contigs that has less than two alignment records
+                        .flatMapValues(alignmentRegionsAndSequences -> SVVariantCallerInternal.assembleBreakpointsFromAlignmentRegions(alignmentRegionsAndSequences._2, alignmentRegionsAndSequences._1, minAlignLength))                                                              // contig -> { Tuple2<Tuple2<String, String>, ChimericAlignment> }          1 -> variable
+                        .mapToPair(SVVariantCallerInternal::keyByBreakpointAllele)      // prepare for consensus (generate key that will be used in consensus step) 1 -> 1
+                        .filter(pair -> SVVariantCallerUtils.isInversion(pair._1()))    // TODO hack right now for debugging during development
+                        .groupByKey();                                                  // consensus                                                                variable -> 1
 
-        return groupedBreakpoints.map(breakpoints -> {
-            final SVVariantCallerInternal localCaller = new SVVariantCallerInternal(); // todo: works for now, but definitely a hack
-            return localCaller.getVariantFromBreakpointAlleleAlignments(breakpoints, broadcastReference);
-        });
+        return groupedBreakpoints.map(breakpoints -> SVVariantCallerInternal.getVariantFromBreakpointAlleleAlignments(breakpoints, broadcastReference));
     }
 }

@@ -53,8 +53,6 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
             "ACAGACTAAATGCCTATCAATGGCAGACTGGATCAAGAAAATATGGTATGGTCAGATGCGGTGGCTCATGCCTGTAATTCCAGCCCTTTGGGAGGCTGAGGCAGGTGGATTGCCTGAGCTTAGAAGTTTGAGACCACTCTGGGCAACATGGCAAAATTTTGTC" +
             "TCCACAGAAGATACAAAAAAAAAAAAAAAAAA";
 
-    static final SVVariantCallerInternal invCaller = new SVVariantCallerInternal();
-
     @Test
     public void testInversionFilter() throws Exception {
 
@@ -62,7 +60,7 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
         final AlignmentRegion region2 = new AlignmentRegion("1", "contig-1", TextCigarCodec.decode("100M"), false, new SimpleInterval("1", 20100, 20200), 60, 101, 200, 0);
         final ChimericAlignment breakpoint1 = new ChimericAlignment("contig-1", region1, region2, "", "", new ArrayList<>());
 
-        final Tuple2<BreakpointAllele, Tuple2<Tuple2<String, String>, ChimericAlignment>> breakpointTuple1 = new Tuple2<>(breakpoint1.makeBreakpointAllele(), new Tuple2<>(new Tuple2<>("1", "contig-1"), breakpoint1));
+        final Tuple2<BreakpointAllele, Tuple2<Tuple2<String, String>, ChimericAlignment>> breakpointTuple1 = new Tuple2<>(new BreakpointAllele.BreakpointAlleleInversion(breakpoint1), new Tuple2<>(new Tuple2<>("1", "contig-1"), breakpoint1));
 
         Assert.assertTrue(SVVariantCallerUtils.isInversion(breakpointTuple1._1()));
 
@@ -70,7 +68,7 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
         final AlignmentRegion region4 = new AlignmentRegion("4", "contig-7", TextCigarCodec.decode("137S141M"), false, new SimpleInterval("10", 38342908, 38343049), 60, 138, 278, 0);
         final ChimericAlignment breakpoint2 = new ChimericAlignment("contig-7", region3, region4, "", "", new ArrayList<>());
 
-        final Tuple2<BreakpointAllele, Tuple2<Tuple2<String, String>, ChimericAlignment>> breakpointTuple2 = new Tuple2<>(breakpoint2.makeBreakpointAllele(), new Tuple2<>(new Tuple2<>("14399","contig-7"), breakpoint2));
+        final Tuple2<BreakpointAllele, Tuple2<Tuple2<String, String>, ChimericAlignment>> breakpointTuple2 = new Tuple2<>(new BreakpointAllele.BreakpointAlleleInversion(breakpoint2), new Tuple2<>(new Tuple2<>("14399","contig-7"), breakpoint2));
 
         Assert.assertFalse(SVVariantCallerUtils.isInversion(breakpointTuple2._1()));
 
@@ -78,7 +76,7 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
         final AlignmentRegion region6 = new AlignmentRegion("3", "contig-7", TextCigarCodec.decode("137S141M"), false, new SimpleInterval("19", 38342908, 38343049), 60, 138, 278, 0);
         final ChimericAlignment breakpoint3 = new ChimericAlignment("contig-7", region5, region6, "", "", new ArrayList<>());
 
-        final Tuple2<BreakpointAllele, Tuple2<Tuple2<String, String>, ChimericAlignment>> breakpointTuple3 = new Tuple2<>(breakpoint3.makeBreakpointAllele(), new Tuple2<>(new Tuple2<>("14399","contig-7"), breakpoint3));
+        final Tuple2<BreakpointAllele, Tuple2<Tuple2<String, String>, ChimericAlignment>> breakpointTuple3 = new Tuple2<>(new BreakpointAllele.BreakpointAlleleInversion(breakpoint3), new Tuple2<>(new Tuple2<>("14399","contig-7"), breakpoint3));
 
         Assert.assertTrue(SVVariantCallerUtils.isInversion(breakpointTuple3._1()));
     }
@@ -93,7 +91,7 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
         alignmentRegionList.add(region1);
         alignmentRegionList.add(region2);
         alignmentRegionList.add(region3);
-        final List<ChimericAlignment> assembledBreakpointsFromAlignmentRegions = invCaller.getBreakpointAlignmentsFromAlignmentRegions(contigSequence, alignmentRegionList, 50);
+        final List<ChimericAlignment> assembledBreakpointsFromAlignmentRegions = SVVariantCallerInternal.getBreakpointAlignmentsFromAlignmentRegions(contigSequence, alignmentRegionList, 50);
         Assert.assertEquals(assembledBreakpointsFromAlignmentRegions.size(), 1);
         final ChimericAlignment chimericAlignment = assembledBreakpointsFromAlignmentRegions.get(0);
         Assert.assertEquals(chimericAlignment.contigId, "contig-1");
@@ -113,7 +111,7 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
         alignmentRegionList.add(region1);
         alignmentRegionList.add(region2);
         alignmentRegionList.add(region3);
-        final List<ChimericAlignment> assembledBreakpointsFromAlignmentRegions = invCaller.getBreakpointAlignmentsFromAlignmentRegions(contigSequence, alignmentRegionList, 50);
+        final List<ChimericAlignment> assembledBreakpointsFromAlignmentRegions = SVVariantCallerInternal.getBreakpointAlignmentsFromAlignmentRegions(contigSequence, alignmentRegionList, 50);
         Assert.assertEquals(assembledBreakpointsFromAlignmentRegions.size(), 1);
         final ChimericAlignment chimericAlignment = assembledBreakpointsFromAlignmentRegions.get(0);
         Assert.assertEquals(chimericAlignment.contigId, "contig-1");
@@ -133,7 +131,7 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
         final ArrayList<AlignmentRegion> alignmentRegionList = new ArrayList<>();
         alignmentRegionList.add(region1);
         alignmentRegionList.add(region2);
-        final List<ChimericAlignment> assembledBreakpointsFromAlignmentRegions = invCaller.getBreakpointAlignmentsFromAlignmentRegions(sequence, alignmentRegionList, 50);
+        final List<ChimericAlignment> assembledBreakpointsFromAlignmentRegions = SVVariantCallerInternal.getBreakpointAlignmentsFromAlignmentRegions(sequence, alignmentRegionList, 50);
         Assert.assertEquals(assembledBreakpointsFromAlignmentRegions.size(), 1);
         final ChimericAlignment chimericAlignment = assembledBreakpointsFromAlignmentRegions.get(0);
         Assert.assertEquals(chimericAlignment.contigId, "702700");
@@ -151,7 +149,7 @@ public class CallVariantsFromAlignedContigsSparkTest extends BaseTest {
         AlignmentRegion overlappingRegion1 = new AlignmentRegion("overlap", "22", TextCigarCodec.decode("47S154M"), false, new SimpleInterval("19", 48699881, 48700035), 60, 1, 154, 0);
         AlignmentRegion overlappingRegion2 = new AlignmentRegion("overlap", "22", TextCigarCodec.decode("116H85M"), true, new SimpleInterval("19", 48700584, 48700669), 60, 117, 201, 0);
 
-        Assert.assertTrue(invCaller.treatNextAlignmentRegionInPairAsInsertion(overlappingRegion1, overlappingRegion2, 50));
+        Assert.assertTrue(SVVariantCallerInternal.treatNextAlignmentRegionInPairAsInsertion(overlappingRegion1, overlappingRegion2, 50));
     }
 
 }

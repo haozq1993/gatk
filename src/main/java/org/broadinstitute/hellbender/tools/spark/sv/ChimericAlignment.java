@@ -54,6 +54,7 @@ import static org.broadinstitute.hellbender.tools.spark.sv.BreakpointAllele.Brea
  * Homology:
  *  AC
  */
+@DefaultSerializer(ChimericAlignment.Serializer.class)
 class ChimericAlignment {
 
     static final String NO_SEQUENCE = "none";
@@ -130,6 +131,18 @@ class ChimericAlignment {
         kryo.writeObject(output, insertionMappings);
     }
 
+    public static final class Serializer extends com.esotericsoftware.kryo.Serializer<ChimericAlignment> {
+        @Override
+        public void write(final Kryo kryo, final Output output, final ChimericAlignment chimericAlignment) {
+            chimericAlignment.serialize(kryo, output);
+        }
+
+        @Override
+        public ChimericAlignment read(final Kryo kryo, final Input input, final Class<ChimericAlignment> klass ) {
+            return new ChimericAlignment(kryo, input);
+        }
+    }
+
     @Override
     public String toString() {
         return contigId +
@@ -141,28 +154,6 @@ class ChimericAlignment {
                 ("".equals(insertedSequence) ? NO_SEQUENCE : insertedSequence) +
                 "\t" +
                 ("".equals(homology) ? NO_SEQUENCE : homology);
-    }
-
-    // -----------------------------------------------------------------------------------------------
-    //
-    // -----------------------------------------------------------------------------------------------
-
-    /**
-     * Construct an {@link BreakpointAllele} with appropriate annotations (e.g. what types of potential variants).
-     */
-    final BreakpointAllele makeBreakpointAllele() {
-        return updateAttribute(makeBreakpointAlleleBase());
-    }
-
-    /**
-     * Extract necessary information that is applicable to all types of potential variants, including complex ones.
-     */
-    private BreakpointAllele makeBreakpointAlleleBase() {
-        final Tuple2<SimpleInterval, SimpleInterval> leftAndRightBreakpointsOnReferenceLeftAlignedForHomology = getLeftAndRightBreakpointsOnReferenceLeftAlignedForHomology();
-        final SimpleInterval leftAlignedLeftBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._1();
-        final SimpleInterval leftAlignedRightBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._2();
-
-        return new BreakpointAllele(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings);
     }
 
     /**
@@ -188,91 +179,35 @@ class ChimericAlignment {
     }
 
     // -----------------------------------------------------------------------------------------------
-    // Parts that should be overridden for detecting different types of variants
+    //
     // -----------------------------------------------------------------------------------------------
-
-    /**
-     * Different types of variants (including complex ones) have their own specific "annotations/attributes" that should
-     * be handled by specific logic.
-     * TODO: should think about how to deal with them in face of complex variants.
-     */
-    protected BreakpointAllele updateAttribute(final BreakpointAllele breakpointAlleleBase) {
-//        return breakpointAlleleBase;
-        final Tuple2<SimpleInterval, SimpleInterval> leftAndRightBreakpointsOnReferenceLeftAlignedForHomology = getLeftAndRightBreakpointsOnReferenceLeftAlignedForHomology();
-        final SimpleInterval leftAlignedLeftBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._1();
-        final SimpleInterval leftAlignedRightBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._2();
-
-        final boolean isFiveToThreeInversion = region1.forwardStrand && !region2.forwardStrand;
-        final boolean isThreeToFiveInversion = !region1.forwardStrand && region2.forwardStrand;
-
-        if (!leftAlignedLeftBreakpointOnAssembledContig.getContig().equals(leftAlignedRightBreakpointOnAssembledContig.getContig())) {
-            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-        } else if (leftAlignedLeftBreakpointOnAssembledContig.getStart() < leftAlignedRightBreakpointOnAssembledContig.getStart()) {
-            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-        } else {
-            return new BreakpointAlleleInversion(leftAlignedRightBreakpointOnAssembledContig, leftAlignedLeftBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-        }
-    }
-
-
-    @DefaultSerializer(ChimericAlignmentInversion.Serializer.class)
-    static final class ChimericAlignmentInversion extends ChimericAlignment {
-
-        public ChimericAlignmentInversion(final String contigId,
-                                          final AlignmentRegion region1, final AlignmentRegion region2,
-                                          final String homology, final String insertedSequence,
-                                          final List<String> insertionMappings) {
-            super(contigId, region1, region2, insertedSequence, homology, insertionMappings);
-        }
-
-        @SuppressWarnings("unchecked")
-        protected ChimericAlignmentInversion(final Kryo kryo, final Input input) {
-            super(kryo, input);
-        }
-
-        @Override
-        protected void serialize(Kryo kryo, Output output) {
-            super.serialize(kryo, output);
-        }
-
-        public static final class Serializer extends com.esotericsoftware.kryo.Serializer<ChimericAlignmentInversion> {
-            @Override
-            public void write(final Kryo kryo, final Output output, final ChimericAlignmentInversion chimericAlignmentIversion) {
-                chimericAlignmentIversion.serialize(kryo, output);
-            }
-
-            @Override
-            public ChimericAlignmentInversion read(final Kryo kryo, final Input input, final Class<ChimericAlignmentInversion> klass ) {
-                return new ChimericAlignmentInversion(kryo, input);
-            }
-        }
-
-        ////////////////////////////////////////
-        // inversion specific
-        ////////////////////////////////////////
-        /**
-         * Returns the canonical representation of the breakpoint implied by this split contig alignment,
-         * including whether it is a 3-5 or 5-3 inversion, and the homology and inserted sequence at the
-         * breakpoint. The two intervals returned are 1bp intervals indicating the exact breakpoint
-         * location. If there is homology at the breakpoint, the breakpoint locations will be left
-         * aligned.
-         */
-        protected BreakpointAllele updateAttribute(final BreakpointAllele breakpointAlleleBase) {
-
-            final Tuple2<SimpleInterval, SimpleInterval> leftAndRightBreakpointsOnReferenceLeftAlignedForHomology = getLeftAndRightBreakpointsOnReferenceLeftAlignedForHomology();
-            final SimpleInterval leftAlignedLeftBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._1();
-            final SimpleInterval leftAlignedRightBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._2();
-
-            final boolean isFiveToThreeInversion = region1.forwardStrand && !region2.forwardStrand;
-            final boolean isThreeToFiveInversion = !region1.forwardStrand && region2.forwardStrand;
-
-            if (!leftAlignedLeftBreakpointOnAssembledContig.getContig().equals(leftAlignedRightBreakpointOnAssembledContig.getContig())) {
-                return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-            } else if (leftAlignedLeftBreakpointOnAssembledContig.getStart() < leftAlignedRightBreakpointOnAssembledContig.getStart()) {
-                return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-            } else {
-                return new BreakpointAlleleInversion(leftAlignedRightBreakpointOnAssembledContig, leftAlignedLeftBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
-            }
-        }
-    }
+//    ////////////////////////////////////////
+//    // inversion specific
+//    ////////////////////////////////////////
+//    /**
+//     * Returns the canonical representation of the breakpoint implied by this split contig alignment,
+//     * including whether it is a 3-5 or 5-3 inversion, and the homology and inserted sequence at the
+//     * breakpoint. The two intervals returned are 1bp intervals indicating the exact breakpoint
+//     * location. If there is homology at the breakpoint, the breakpoint locations will be left
+//     * aligned.
+//     */
+//    /**
+//     * Construct an {@link BreakpointAllele} with appropriate annotations (e.g. what types of potential variants).
+//     */
+//    final BreakpointAllele makeBreakpointAllele() {
+//        final Tuple2<SimpleInterval, SimpleInterval> leftAndRightBreakpointsOnReferenceLeftAlignedForHomology = getLeftAndRightBreakpointsOnReferenceLeftAlignedForHomology();
+//        final SimpleInterval leftAlignedLeftBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._1();
+//        final SimpleInterval leftAlignedRightBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._2();
+//
+//        final boolean isFiveToThreeInversion = region1.forwardStrand && !region2.forwardStrand;
+//        final boolean isThreeToFiveInversion = !region1.forwardStrand && region2.forwardStrand;
+//
+//        if (!leftAlignedLeftBreakpointOnAssembledContig.getContig().equals(leftAlignedRightBreakpointOnAssembledContig.getContig())) {
+//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
+//        } else if (leftAlignedLeftBreakpointOnAssembledContig.getStart() < leftAlignedRightBreakpointOnAssembledContig.getStart()) {
+//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
+//        } else {
+//            return new BreakpointAlleleInversion(leftAlignedRightBreakpointOnAssembledContig, leftAlignedLeftBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
+//        }
+//    }
 }

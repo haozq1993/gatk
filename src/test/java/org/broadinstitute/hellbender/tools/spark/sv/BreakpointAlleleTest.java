@@ -21,19 +21,19 @@ public class BreakpointAlleleTest {
         final AlignmentRegion region2 = new AlignmentRegion("1", "contig-1", TextCigarCodec.decode("100M"), false, new SimpleInterval("1", 20100, 20200), 60, 101, 200, 0);
         final ChimericAlignment breakpoint1 = new ChimericAlignment("contig-1", region1, region2, "", "", new ArrayList<>());
 
-        Assert.assertTrue(SVVariantCallerUtils.isInversion(breakpoint1.makeBreakpointAllele()));
+        Assert.assertTrue(SVVariantCallerUtils.isInversion(new BreakpointAllele.BreakpointAlleleInversion(breakpoint1)));
 
         final AlignmentRegion region3 = new AlignmentRegion("4", "contig-7", TextCigarCodec.decode("137M141S"), true, new SimpleInterval("19", 38343346, 38343483), 60, 1, 137, 0);
         final AlignmentRegion region4 = new AlignmentRegion("4", "contig-7", TextCigarCodec.decode("137S141M"), false, new SimpleInterval("10", 38342908, 38343049), 60, 138, 278, 0);
         final ChimericAlignment breakpoint2 = new ChimericAlignment("contig-7", region3, region4, "", "", new ArrayList<>());
 
-        Assert.assertFalse(SVVariantCallerUtils.isInversion(breakpoint2.makeBreakpointAllele()));
+        Assert.assertFalse(SVVariantCallerUtils.isInversion(new BreakpointAllele.BreakpointAlleleInversion(breakpoint2)));
 
         final AlignmentRegion region5 = new AlignmentRegion("3", "contig-7", TextCigarCodec.decode("137M141S"), true, new SimpleInterval("19", 38343346, 38343483), 60, 1, 137, 0);
         final AlignmentRegion region6 = new AlignmentRegion("3", "contig-7", TextCigarCodec.decode("137S141M"), false, new SimpleInterval("19", 38342908, 38343049), 60, 138, 278, 0);
         final ChimericAlignment breakpoint3 = new ChimericAlignment("contig-7", region5, region6, "", "", new ArrayList<>());
 
-        Assert.assertTrue(SVVariantCallerUtils.isInversion(breakpoint3.makeBreakpointAllele()));
+        Assert.assertTrue(SVVariantCallerUtils.isInversion(new BreakpointAllele.BreakpointAlleleInversion(breakpoint3)));
     }
 
     @Test
@@ -53,7 +53,7 @@ public class BreakpointAlleleTest {
         final ArrayList<String> insertionMappings = new ArrayList<>();
         insertionMappings.add(insertionMapping);
         final ChimericAlignment breakpoint = new ChimericAlignment(contigId, region1, region2, "TGTGTGT", "ACAC", insertionMappings);
-        return breakpoint.makeBreakpointAllele();
+        return new BreakpointAllele.BreakpointAlleleInversion(breakpoint);
     }
 
     @Test(groups = "sv")

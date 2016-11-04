@@ -33,7 +33,7 @@ public class ChimericAlignmentTest {
         final AlignmentRegion region1 = new AlignmentRegion("1","1", TextCigarCodec.decode("105M100S"), true, new SimpleInterval("1", 100, 205), 60, 1, 105, 0);
         final AlignmentRegion region2 = new AlignmentRegion("1","1", TextCigarCodec.decode("100S105M"), false, new SimpleInterval("1", 500, 605), 60, 95, 200, 0);
         final ChimericAlignment chimericAlignment = new ChimericAlignment("1", region1, region2, "", "ACACA", new ArrayList<>());
-        final BreakpointAllele breakpointAllele = chimericAlignment.makeBreakpointAllele();
+        final BreakpointAllele breakpointAllele = new BreakpointAlleleInversion(chimericAlignment);
         Assert.assertEquals(breakpointAllele.leftAlignedLeftBreakpoint, new SimpleInterval("1", 200, 200));
         Assert.assertEquals(breakpointAllele.leftAlignedRightBreakpoint, new SimpleInterval("1", 605, 605));
         Assert.assertEquals(breakpointAllele.homology, "ACACA");
@@ -46,7 +46,7 @@ public class ChimericAlignmentTest {
         final AlignmentRegion region2 = new AlignmentRegion("1","1", TextCigarCodec.decode("100S105M"), false, new SimpleInterval("1", 100, 205), 60, 95, 200, 0);
 
         final ChimericAlignment chimericAlignment = new ChimericAlignment("1", region1, region2, "", "ACACA", new ArrayList<>());
-        final BreakpointAllele breakpointAllele = chimericAlignment.makeBreakpointAllele();
+        final BreakpointAllele breakpointAllele = new BreakpointAlleleInversion(chimericAlignment);
         Assert.assertEquals(breakpointAllele.leftAlignedLeftBreakpoint, new SimpleInterval("1", 200, 200));
         Assert.assertEquals(breakpointAllele.leftAlignedRightBreakpoint, new SimpleInterval("1", 605, 605));
         Assert.assertEquals(breakpointAllele.homology, "ACACA");
@@ -58,7 +58,7 @@ public class ChimericAlignmentTest {
         final AlignmentRegion region1 = new AlignmentRegion("1","1", TextCigarCodec.decode("100S105M"), false, new SimpleInterval("1", 200, 305), 60, 95, 200, 0);
         final AlignmentRegion region2 = new AlignmentRegion("1","1", TextCigarCodec.decode("105M100S"), true, new SimpleInterval("1", 600, 705), 60, 1, 105, 0);
         final ChimericAlignment chimericAlignment = new ChimericAlignment("1", region1, region2, "", "ACACA", new ArrayList<>());
-        final BreakpointAllele breakpointAllele = chimericAlignment.makeBreakpointAllele();
+        final BreakpointAllele breakpointAllele = new BreakpointAlleleInversion(chimericAlignment);
         Assert.assertEquals(breakpointAllele.leftAlignedLeftBreakpoint, new SimpleInterval("1", 200, 200));
         Assert.assertEquals(breakpointAllele.leftAlignedRightBreakpoint, new SimpleInterval("1", 605, 605));
         Assert.assertEquals(breakpointAllele.homology, "ACACA");
@@ -70,7 +70,7 @@ public class ChimericAlignmentTest {
         final AlignmentRegion region1 = new AlignmentRegion("1","1", TextCigarCodec.decode("105M100S"), false, new SimpleInterval("1", 600, 705), 60, 1, 105, 0);
         final AlignmentRegion region2 = new AlignmentRegion("1","1", TextCigarCodec.decode("100S105M"), true, new SimpleInterval("1", 200, 305), 60, 95, 200, 0);
         final ChimericAlignment chimericAlignment = new ChimericAlignment("1", region1, region2, "", "ACACA", new ArrayList<>());
-        final BreakpointAllele breakpointAllele = chimericAlignment.makeBreakpointAllele();
+        final BreakpointAllele breakpointAllele = new BreakpointAlleleInversion(chimericAlignment);
         Assert.assertEquals(breakpointAllele.leftAlignedLeftBreakpoint, new SimpleInterval("1", 200, 200));
         Assert.assertEquals(breakpointAllele.leftAlignedRightBreakpoint, new SimpleInterval("1", 605, 605));
         Assert.assertEquals(breakpointAllele.homology, "ACACA");

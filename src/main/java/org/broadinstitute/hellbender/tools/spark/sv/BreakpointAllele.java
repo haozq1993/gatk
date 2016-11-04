@@ -5,6 +5,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
+import scala.Tuple2;
 
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +29,30 @@ class BreakpointAllele {
         this.leftAlignedRightBreakpoint = leftAlignedRightBreakpoint;
         this.insertedSequence = insertedSequence;
         this.homology = homology;
+    }
+
+    protected BreakpointAllele(final ChimericAlignment chimericAlignment) {
+
+        final Tuple2<SimpleInterval, SimpleInterval> leftAndRightBreakpointsOnReferenceLeftAlignedForHomology = chimericAlignment.getLeftAndRightBreakpointsOnReferenceLeftAlignedForHomology();
+        final SimpleInterval leftAlignedLeftBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._1();
+        final SimpleInterval leftAlignedRightBreakpointOnAssembledContig = leftAndRightBreakpointsOnReferenceLeftAlignedForHomology._2();
+
+        if (!leftAlignedLeftBreakpointOnAssembledContig.getContig().equals(leftAlignedRightBreakpointOnAssembledContig.getContig())) {
+            this.leftAlignedLeftBreakpoint = leftAlignedLeftBreakpointOnAssembledContig;
+            this.leftAlignedRightBreakpoint = leftAlignedRightBreakpointOnAssembledContig;
+//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
+        } else if (leftAlignedLeftBreakpointOnAssembledContig.getStart() < leftAlignedRightBreakpointOnAssembledContig.getStart()) {
+            this.leftAlignedLeftBreakpoint = leftAlignedLeftBreakpointOnAssembledContig;
+            this.leftAlignedRightBreakpoint = leftAlignedRightBreakpointOnAssembledContig;
+//            return new BreakpointAlleleInversion(leftAlignedLeftBreakpointOnAssembledContig, leftAlignedRightBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
+        } else {
+            this.leftAlignedLeftBreakpoint = leftAlignedRightBreakpointOnAssembledContig;
+            this.leftAlignedRightBreakpoint = leftAlignedLeftBreakpointOnAssembledContig;
+//            return new BreakpointAlleleInversion(leftAlignedRightBreakpointOnAssembledContig, leftAlignedLeftBreakpointOnAssembledContig, homology, insertedSequence, insertionMappings, isFiveToThreeInversion, isThreeToFiveInversion);
+        }
+
+        this.insertedSequence = chimericAlignment.insertedSequence;
+        this.homology = chimericAlignment.homology;
     }
 
     @SuppressWarnings("unchecked")
@@ -83,7 +108,15 @@ class BreakpointAllele {
     @DefaultSerializer(BreakpointAlleleInversion.Serializer.class)
     static final class BreakpointAlleleInversion extends BreakpointAllele {
 
-        final BreakpointAlleleInversion.InversionType inversionType;
+        final InversionType inversionType;
+
+        public BreakpointAlleleInversion(final ChimericAlignment chimericAlignment){
+            super(chimericAlignment);
+
+            final boolean isFiveToThreeInversion = chimericAlignment.region1.forwardStrand && !chimericAlignment.region2.forwardStrand;
+            final boolean isThreeToFiveInversion = !chimericAlignment.region1.forwardStrand && chimericAlignment.region2.forwardStrand;
+            this.inversionType = determineInversionType(isFiveToThreeInversion, isThreeToFiveInversion);
+        }
 
         public BreakpointAlleleInversion(final SimpleInterval leftAlignedLeftBreakpoint, final SimpleInterval leftAlignedRightBreakpoint,
                                          final String homology, final String insertedSequence, final List<String> insertionMappings,
@@ -143,19 +176,15 @@ class BreakpointAllele {
         // inversion specific
         ////////////////////////////////////////
 
-        boolean isInversion() {
-            return leftAlignedLeftBreakpoint.getContig().equals(leftAlignedRightBreakpoint.getContig()) && (getInversionType() == INV_3_TO_5 || getInversionType() == INV_5_TO_3);
-        }
-
         enum InversionType  {
             INV_3_TO_5, INV_5_TO_3, INV_NONE
         }
 
-        BreakpointAlleleInversion.InversionType getInversionType() {
+        InversionType getInversionType() {
             return inversionType;
         }
 
-        private BreakpointAlleleInversion.InversionType determineInversionType(final boolean fiveToThree, final boolean threeToFive){
+        private InversionType determineInversionType(final boolean fiveToThree, final boolean threeToFive){
             if(!fiveToThree && threeToFive){
                 return INV_3_TO_5;
             }else if(fiveToThree && !threeToFive){
